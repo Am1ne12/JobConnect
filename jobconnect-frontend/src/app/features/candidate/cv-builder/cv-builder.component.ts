@@ -6,11 +6,12 @@ import { SkillService } from '../../../core/services/skill.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CandidateProfile, Skill, Experience, Education, Certification } from '../../../core/models';
 import { Subscription } from 'rxjs';
+import { DatePickerComponent } from '../../../shared/components/date-picker/date-picker.component';
 
 @Component({
     selector: 'app-cv-builder',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [CommonModule, ReactiveFormsModule, DatePickerComponent],
     templateUrl: './cv-builder.component.html',
     styleUrl: './cv-builder.component.scss'
 })

@@ -1,0 +1,58 @@
+<div class="date-picker" [class.disabled]="disabled" [class.open]="isOpen()">
+    <!-- Trigger Button -->
+    <button type="button" class="date-trigger" (click)="toggle()">
+        <span class="calendar-icon">📅</span>
+        <span class="date-value" [class.placeholder]="!displayValue()">
+            {{ displayValue() || placeholder }}
+        </span>
+        @if (displayValue()) {
+        <button type="button" class="clear-btn" (click)="clear($event)">×</button>
+        }
+        <span class="chevron">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+        </span>
+    </button>
+
+    <!-- Dropdown Calendar -->
+    @if (isOpen()) {
+    <div class="calendar-dropdown">
+        <!-- Header -->
+        <div class="calendar-header">
+            <button type="button" class="nav-btn" (click)="prevMonth()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </button>
+            <span class="month-year">{{ currentMonthName() }} {{ currentYear() }}</span>
+            <button type="button" class="nav-btn" (click)="nextMonth()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Weekday Headers -->
+        <div class="weekdays">
+            @for (day of weekDays; track day) {
+            <span class="weekday">{{ day }}</span>
+            }
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="calendar-grid">
+            @for (day of calendarDays(); track day.date.getTime()) {
+            <button type="button" class="day-btn" [class.other-month]="!day.isCurrentMonth" [class.today]="day.isToday"
+                [class.selected]="day.isSelected" [class.disabled]="day.isDisabled" [disabled]="day.isDisabled"
+                (click)="selectDate(day)">
+                {{ day.date.getDate() }}
+            </button>
+            }
+        </div>
+    </div>
+    }
+</div>

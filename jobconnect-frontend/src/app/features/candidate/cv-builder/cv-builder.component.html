@@ -91,12 +91,13 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Start Date</label>
-                <input type="date" formControlName="startDate">
+                <app-date-picker formControlName="startDate" placeholder="Select start date"></app-date-picker>
               </div>
               <div class="form-group">
                 <label>End Date</label>
-                <input type="date" formControlName="endDate"
-                  [attr.disabled]="exp.get('isCurrentRole')?.value ? true : null">
+                <app-date-picker formControlName="endDate" placeholder="Select end date"
+                  [disabled]="exp.get('isCurrentRole')?.value">
+                </app-date-picker>
               </div>
               <div class="form-group checkbox">
                 <label>
@@ -180,11 +181,11 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Issue Date</label>
-                <input type="date" formControlName="issueDate">
+                <app-date-picker formControlName="issueDate" placeholder="Select issue date"></app-date-picker>
               </div>
               <div class="form-group">
                 <label>Expiry Date</label>
-                <input type="date" formControlName="expiryDate">
+                <app-date-picker formControlName="expiryDate" placeholder="Select expiry date"></app-date-picker>
               </div>
             </div>
           </div>
