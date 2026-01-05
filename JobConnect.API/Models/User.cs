@@ -3,8 +3,7 @@ namespace JobConnect.API.Models;
 public enum UserRole
 {
     Candidate,
-    Company,
-    Admin
+    Company
 }
 
 public class User
