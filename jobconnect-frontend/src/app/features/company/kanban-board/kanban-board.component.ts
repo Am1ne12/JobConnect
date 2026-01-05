@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, Input } from '@angular/core';
+import { Component, OnInit, signal, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { CompanyService } from '../../../core/services/company.service';
@@ -31,6 +31,9 @@ export class KanbanBoardComponent implements OnInit {
     loading = signal(true);
     updating = signal(false);
     selectedApplication = signal<Application | null>(null);
+    isMobile = signal(false);
+
+    private readonly MOBILE_BREAKPOINT = 768;
 
     private readonly columnDefs: Omit<KanbanColumn, 'applications'>[] = [
         { status: ApplicationStatus.Submitted, title: 'Submitted', color: '#667eea' },
@@ -41,7 +44,18 @@ export class KanbanBoardComponent implements OnInit {
         { status: ApplicationStatus.Rejected, title: 'Rejected', color: '#ef4444' }
     ];
 
-    constructor(private companyService: CompanyService) { }
+    constructor(private companyService: CompanyService) {
+        this.checkMobile();
+    }
+
+    @HostListener('window:resize')
+    onResize() {
+        this.checkMobile();
+    }
+
+    private checkMobile() {
+        this.isMobile.set(window.innerWidth < this.MOBILE_BREAKPOINT);
+    }
 
     ngOnInit() {
         this.loadApplications();

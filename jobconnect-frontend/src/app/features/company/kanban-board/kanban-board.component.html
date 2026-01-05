@@ -24,7 +24,7 @@
                 [cdkDropListConnectedTo]="getConnectedLists()" (cdkDropListDropped)="drop($event, column)">
 
                 @for (app of column.applications; track app.id) {
-                <div class="kanban-card" cdkDrag>
+                <div class="kanban-card" cdkDrag [cdkDragDisabled]="isMobile()">
                     <div class="card-drag-preview" *cdkDragPreview>
                         <span class="preview-name">{{ app.candidateName }}</span>
                     </div>
