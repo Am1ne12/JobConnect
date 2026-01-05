@@ -142,6 +142,43 @@
                 }
             </div>
 
+            <!-- Publish Status -->
+            <div class="card status-card">
+                <h2>Publishing Status</h2>
+                <p class="card-subtitle">Current: <strong>{{ job()?.status }}</strong></p>
+
+                <div class="status-options">
+                    <button type="button" class="status-option" [class.selected]="!shouldPublish()"
+                        (click)="setShouldPublish(false)">
+                        <div class="status-icon draft">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"
+                                height="20">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                        </div>
+                        <div class="status-content">
+                            <span class="status-title">Keep as Draft</span>
+                            <span class="status-desc">Save changes without publishing</span>
+                        </div>
+                    </button>
+                    <button type="button" class="status-option" [class.selected]="shouldPublish()"
+                        (click)="setShouldPublish(true)">
+                        <div class="status-icon publish">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"
+                                height="20">
+                                <path d="M22 2L11 13" />
+                                <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                            </svg>
+                        </div>
+                        <div class="status-content">
+                            <span class="status-title">Publish</span>
+                            <span class="status-desc">Make visible to candidates</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
             <!-- Actions -->
             <div class="form-actions">
                 <a [routerLink]="['/company/jobs', jobId, 'candidates']" class="btn-secondary">Cancel</a>
@@ -150,7 +187,7 @@
                     <span class="spinner"></span>
                     Saving...
                     } @else {
-                    Save Changes
+                    {{ shouldPublish() ? 'Save & Publish' : 'Save Changes' }}
                     }
                 </button>
             </div>

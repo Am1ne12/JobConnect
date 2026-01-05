@@ -23,6 +23,7 @@ export class JobEditComponent implements OnInit {
     loading = signal(true);
     saving = signal(false);
     error = signal<string | null>(null);
+    shouldPublish = signal(false);
 
     readonly jobTypes = [
         { value: JobType.FullTime, label: 'Full Time' },
@@ -58,6 +59,8 @@ export class JobEditComponent implements OnInit {
             next: (job) => {
                 this.job.set(job);
                 this.populateForm(job);
+                // Set publish based on current status
+                this.shouldPublish.set(job.status === 'Published');
                 this.loading.set(false);
             },
             error: () => {
@@ -118,6 +121,10 @@ export class JobEditComponent implements OnInit {
         return typeMap[typeString] ?? JobType.FullTime;
     }
 
+    setShouldPublish(value: boolean) {
+        this.shouldPublish.set(value);
+    }
+
     toggleSkill(skillId: number) {
         const current = this.selectedSkills();
         if (current.includes(skillId)) {
@@ -161,8 +168,22 @@ export class JobEditComponent implements OnInit {
 
         this.jobService.updateJob(this.jobId, jobData).subscribe({
             next: () => {
-                this.saving.set(false);
-                this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
+                if (this.shouldPublish() && this.job()?.status !== 'Published') {
+                    // Publish the job after update
+                    this.jobService.publishJob(this.jobId).subscribe({
+                        next: () => {
+                            this.saving.set(false);
+                            this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
+                        },
+                        error: () => {
+                            this.saving.set(false);
+                            this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
+                        }
+                    });
+                } else {
+                    this.saving.set(false);
+                    this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
+                }
             },
             error: (err) => {
                 this.saving.set(false);

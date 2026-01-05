@@ -19,6 +19,7 @@ export class JobCreateComponent implements OnInit {
     selectedSkills = signal<number[]>([]);
     saving = signal(false);
     error = signal<string | null>(null);
+    publishNow = signal(false);
 
     readonly jobTypes = [
         { value: JobType.FullTime, label: 'Full Time' },
@@ -59,6 +60,10 @@ export class JobCreateComponent implements OnInit {
             experienceYearsMin: [0],
             experienceYearsMax: [null]
         });
+    }
+
+    setPublishNow(value: boolean) {
+        this.publishNow.set(value);
     }
 
     toggleSkill(skillId: number) {
@@ -104,8 +109,22 @@ export class JobCreateComponent implements OnInit {
 
         this.jobService.createJob(jobData).subscribe({
             next: (job) => {
-                this.saving.set(false);
-                this.router.navigate(['/company/dashboard']);
+                if (this.publishNow()) {
+                    // Publish the job immediately after creation
+                    this.jobService.publishJob(job.id).subscribe({
+                        next: () => {
+                            this.saving.set(false);
+                            this.router.navigate(['/company/dashboard']);
+                        },
+                        error: () => {
+                            this.saving.set(false);
+                            this.router.navigate(['/company/dashboard']);
+                        }
+                    });
+                } else {
+                    this.saving.set(false);
+                    this.router.navigate(['/company/dashboard']);
+                }
             },
             error: (err) => {
                 this.saving.set(false);
