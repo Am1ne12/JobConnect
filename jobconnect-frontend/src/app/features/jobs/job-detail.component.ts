@@ -106,9 +106,6 @@ import { JobPosting } from '../../core/models';
                 } @else {
                   <h3>Ready to apply?</h3>
                   <p>Take the next step in your career</p>
-                  <textarea [(ngModel)]="coverLetter" 
-                            placeholder="Write a brief cover letter (optional)..."
-                            rows="4"></textarea>
                   <button class="btn-apply" (click)="apply()" [disabled]="applying()">
                     @if (applying()) {
                       <span class="spinner-small"></span>
