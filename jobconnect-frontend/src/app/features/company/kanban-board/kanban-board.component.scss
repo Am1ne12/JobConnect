@@ -206,7 +206,7 @@
 .candidate-avatar {
     width: 36px;
     height: 36px;
-    background: var(--accent);
+    background: linear-gradient(135deg, #6366f1, #a855f7);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -214,6 +214,7 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: white;
+    flex-shrink: 0;
 }
 
 .candidate-details {
