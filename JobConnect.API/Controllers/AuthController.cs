@@ -105,4 +105,84 @@ public class AuthController : ControllerBase
             profileId
         ));
     }
+
+    [HttpPut("change-email")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<ActionResult<AuthResponseDto>> ChangeEmail([FromBody] ChangeEmailDto dto)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var user = await _context.Users
+            .Include(u => u.CandidateProfile)
+            .Include(u => u.Company)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        if (!_authService.VerifyPassword(dto.CurrentPassword, user.PasswordHash))
+        {
+            return BadRequest(new { message = "Current password is incorrect" });
+        }
+
+        if (await _context.Users.AnyAsync(u => u.Email == dto.NewEmail && u.Id != userId))
+        {
+            return BadRequest(new { message = "Email already in use" });
+        }
+
+        user.Email = dto.NewEmail;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        var token = _authService.GenerateToken(user);
+        int? profileId = user.Role switch
+        {
+            UserRole.Candidate => user.CandidateProfile?.Id,
+            UserRole.Company => user.Company?.Id,
+            _ => null
+        };
+
+        return Ok(new AuthResponseDto(
+            token,
+            user.Id,
+            user.Email,
+            user.Role.ToString(),
+            profileId
+        ));
+    }
+
+    [HttpPut("change-password")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var user = await _context.Users.FindAsync(userId);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        if (!_authService.VerifyPassword(dto.CurrentPassword, user.PasswordHash))
+        {
+            return BadRequest(new { message = "Current password is incorrect" });
+        }
+
+        user.PasswordHash = _authService.HashPassword(dto.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Password changed successfully" });
+    }
 }

@@ -28,6 +28,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/auth/register.component').then(m => m.RegisterComponent)
     },
 
+    // Settings route (authenticated users only)
+    {
+        path: 'settings',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent)
+    },
+
     // Candidate routes
     {
         path: 'candidate',

@@ -26,6 +26,16 @@ public record AuthResponseDto(
     int? ProfileId
 );
 
+public record ChangeEmailDto(
+    [Required] [EmailAddress] string NewEmail,
+    [Required] string CurrentPassword
+);
+
+public record ChangePasswordDto(
+    [Required] string CurrentPassword,
+    [Required] [MinLength(6)] string NewPassword
+);
+
 // User DTOs
 public record UserDto(
     int Id,

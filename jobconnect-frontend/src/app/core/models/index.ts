@@ -34,6 +34,16 @@ export interface RegisterRequest {
     companyName?: string;
 }
 
+export interface ChangeEmailRequest {
+    newEmail: string;
+    currentPassword: string;
+}
+
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+}
+
 // Candidate types
 export interface CandidateProfile {
     id: number;

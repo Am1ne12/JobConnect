@@ -2,7 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
-import { AuthResponse, LoginRequest, RegisterRequest, UserRole } from '../models';
+import { AuthResponse, ChangeEmailRequest, ChangePasswordRequest, LoginRequest, RegisterRequest, UserRole } from '../models';
 import { environment } from '../../../environments/environment';
 
 interface JwtPayload {
@@ -152,6 +152,15 @@ export class AuthService {
 
     getToken(): string | null {
         return this.tokenSignal();
+    }
+
+    changeEmail(request: ChangeEmailRequest): Observable<AuthResponse> {
+        return this.http.put<AuthResponse>(`${this.API_URL}/change-email`, request)
+            .pipe(tap(response => this.handleAuthSuccess(response)));
+    }
+
+    changePassword(request: ChangePasswordRequest): Observable<{ message: string }> {
+        return this.http.put<{ message: string }>(`${this.API_URL}/change-password`, request);
     }
 
     private handleAuthSuccess(response: AuthResponse): void {

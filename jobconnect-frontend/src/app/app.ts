@@ -31,8 +31,15 @@ import { NotificationService } from './core/services/notification.service';
             }
           </div>
 
+
           <div class="nav-actions">
             @if (authService.isAuthenticated()) {
+              <a routerLink="/settings" class="btn-icon" title="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+              </a>
               <button class="btn-ghost" (click)="authService.logout()">
                 Log out
               </button>
@@ -108,6 +115,13 @@ import { NotificationService } from './core/services/notification.service';
 
           <div class="mobile-nav-footer">
             @if (authService.isAuthenticated()) {
+              <a routerLink="/settings" class="mobile-btn mobile-btn-outline" (click)="closeMobileMenu()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                Settings
+              </a>
               <button class="mobile-btn mobile-btn-outline" (click)="handleLogout()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
@@ -283,6 +297,34 @@ import { NotificationService } from './core/services/notification.service';
       &:hover {
         color: var(--text-primary);
         background: rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border-radius: var(--radius-full);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      svg {
+        width: 18px;
+        height: 18px;
+        color: var(--text-secondary);
+        transition: color var(--transition-fast);
+      }
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.04);
+
+        svg {
+          color: var(--text-primary);
+        }
       }
     }
 
