@@ -96,12 +96,17 @@ import { Application, JobPosting } from '../../../core/models';
     .candidates-page {
       min-height: 100vh;
       background: var(--bg-secondary);
+      overflow-x: hidden;
     }
 
     /* Header Bar - Glassmorphism style matching navbar */
     .header-bar {
       padding: 1rem 2rem;
       background: var(--bg-secondary);
+
+      @media (max-width: 768px) {
+        padding: 0.75rem 1rem;
+      }
     }
 
     .header-inner {
@@ -122,6 +127,7 @@ import { Application, JobPosting } from '../../../core/models';
 
       @media (max-width: 768px) {
         flex-direction: column;
+        align-items: stretch;
         border-radius: var(--radius-xl);
         padding: 1rem;
         gap: 1rem;
@@ -132,6 +138,11 @@ import { Application, JobPosting } from '../../../core/models';
       display: flex;
       align-items: center;
       gap: 1rem;
+      min-width: 0;
+
+      @media (max-width: 768px) {
+        width: 100%;
+      }
     }
 
     .back-btn {
@@ -145,6 +156,7 @@ import { Application, JobPosting } from '../../../core/models';
       border-radius: 50%;
       text-decoration: none;
       transition: all var(--transition-fast);
+      flex-shrink: 0;
 
       &:hover {
         background: rgba(0, 0, 0, 0.04);
@@ -156,6 +168,8 @@ import { Application, JobPosting } from '../../../core/models';
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
+      min-width: 0;
+      flex: 1;
     }
 
     .header-info h1 {
@@ -165,12 +179,18 @@ import { Application, JobPosting } from '../../../core/models';
       letter-spacing: -0.02em;
       margin: 0;
       line-height: 1.3;
+      word-break: break-word;
+
+      @media (max-width: 768px) {
+        font-size: 0.9375rem;
+      }
     }
 
     .job-meta {
       display: flex;
       align-items: center;
       gap: 0.625rem;
+      flex-wrap: wrap;
     }
 
     .meta-tag {
@@ -194,6 +214,13 @@ import { Application, JobPosting } from '../../../core/models';
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex-wrap: wrap;
+
+      @media (max-width: 768px) {
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
     }
 
     .edit-btn {
@@ -212,6 +239,12 @@ import { Application, JobPosting } from '../../../core/models';
       &:hover {
         color: var(--text-primary);
         background: rgba(0, 0, 0, 0.04);
+      }
+
+      @media (max-width: 768px) {
+        padding: 0.625rem 1rem;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-default);
       }
     }
 
@@ -238,6 +271,12 @@ import { Application, JobPosting } from '../../../core/models';
         opacity: 0.6;
         cursor: not-allowed;
       }
+
+      @media (max-width: 768px) {
+        padding: 0.625rem 1rem;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-default);
+      }
     }
 
     .sort-group {
@@ -247,12 +286,22 @@ import { Application, JobPosting } from '../../../core/models';
       background: rgba(0, 0, 0, 0.03);
       padding: 0.25rem;
       border-radius: var(--radius-full);
+
+      @media (max-width: 768px) {
+        flex: 1;
+        justify-content: center;
+        padding: 0.25rem 0.5rem;
+      }
     }
 
     .sort-label {
       font-size: 0.75rem;
       color: var(--text-muted);
       padding: 0 0.5rem;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
     }
 
     .sort-btn {
@@ -275,12 +324,22 @@ import { Application, JobPosting } from '../../../core/models';
         color: var(--text-primary);
         box-shadow: var(--shadow-sm);
       }
+
+      @media (max-width: 768px) {
+        padding: 0.5rem 1rem;
+        flex: 1;
+        text-align: center;
+      }
     }
 
     /* Kanban Container */
     .kanban-container {
       padding: 0 2rem 2rem;
       animation: fadeIn 0.4s ease 0.1s backwards;
+
+      @media (max-width: 768px) {
+        padding: 0 0.5rem 1.5rem;
+      }
     }
 
     /* Loading State */
@@ -305,6 +364,15 @@ import { Application, JobPosting } from '../../../core/models';
 
       p {
         font-size: 0.875rem;
+      }
+
+      @media (max-width: 768px) {
+        min-height: 50vh;
+
+        .spinner {
+          width: 32px;
+          height: 32px;
+        }
       }
     }
   `]

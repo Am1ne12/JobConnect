@@ -1,7 +1,7 @@
 /* Kanban Board - Light Mode Liquid Glass Design */
 
 .kanban-container {
-    padding: 2rem;
+    padding: 1rem 0;
     min-height: 100vh;
     background: var(--bg-secondary);
 }
@@ -324,7 +324,7 @@
 
 @media (max-width: 768px) {
     .kanban-container {
-        padding: 1rem;
+        padding: 0.5rem 0;
     }
 
     .kanban-header {
