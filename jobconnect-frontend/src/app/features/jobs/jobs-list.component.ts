@@ -59,50 +59,44 @@ import { JobPosting, Skill } from '../../core/models';
             <p>Try adjusting your search criteria</p>
           </div>
         } @else {
-          <div class="jobs-grid">
+          <div class="jobs-list">
             @for (job of jobs(); track job.id; let i = $index) {
-              <a [routerLink]="['/jobs', job.id]" class="job-card" [style.animation-delay]="(i * 0.05) + 's'">
-                <div class="card-header">
-                  <div class="company-logo">{{ job.companyName.charAt(0) }}</div>
-                  <div class="job-meta">
-                    <h3>{{ job.title }}</h3>
-                    <span class="company-name">{{ job.companyName }}</span>
-                  </div>
+              <a [routerLink]="['/jobs', job.id]" class="job-item" [style.animation-delay]="(i * 0.04) + 's'">
+                <div class="job-logo">{{ job.companyName.charAt(0) }}</div>
+                
+                <div class="job-info">
+                  <h3>{{ job.title }}</h3>
+                  <span class="company-name">{{ job.companyName }}</span>
                 </div>
                 
-                <p class="job-description">{{ job.description | slice:0:150 }}...</p>
-                
-                <div class="job-tags">
+                <div class="job-meta">
                   <span class="tag type">{{ job.jobType }}</span>
                   @if (job.location) {
                     <span class="tag location">📍 {{ job.location }}</span>
                   }
+                </div>
+                
+                <div class="job-salary">
                   @if (job.salaryMin && job.salaryMax) {
-                    <span class="tag salary">
-                      {{ job.salaryCurrency || 'EUR' }} {{ job.salaryMin | number:'1.0-0' }} - {{ job.salaryMax | number:'1.0-0' }}
-                    </span>
+                    <span class="salary">{{ job.salaryCurrency || 'EUR' }} {{ job.salaryMin | number:'1.0-0' }} - {{ job.salaryMax | number:'1.0-0' }}</span>
                   }
                 </div>
 
-                @if (job.requiredSkills?.length) {
-                  <div class="skill-tags">
-                    @for (skill of job.requiredSkills?.slice(0, 4); track skill.skillId) {
-                      <span class="skill-tag">{{ skill.skillName }}</span>
-                    }
-                  </div>
-                }
-
-                <div class="card-footer">
+                <div class="job-stats">
                   <span class="applicants">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                       <circle cx="9" cy="7" r="4"/>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                     </svg>
-                    {{ job.applicationCount }} applicants
+                    {{ job.applicationCount }}
                   </span>
                   <span class="posted">{{ job.publishedAt | date:'shortDate' }}</span>
+                </div>
+
+                <div class="job-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
                 </div>
               </a>
             }
