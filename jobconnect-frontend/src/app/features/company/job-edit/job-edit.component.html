@@ -1,0 +1,160 @@
+<div class="job-edit-page">
+    @if (loading()) {
+    <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading job details...</p>
+    </div>
+    } @else {
+    <!-- Header Bar -->
+    <div class="header-bar">
+        <div class="header-inner">
+            <div class="header-left">
+                <a [routerLink]="['/company/jobs', jobId, 'candidates']" class="back-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </a>
+                <div class="header-info">
+                    <h1>Edit Job</h1>
+                    <span class="header-subtitle">{{ job()?.title }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-container">
+        @if (error()) {
+        <div class="error-banner">
+            <span class="error-icon">⚠️</span>
+            <span>{{ error() }}</span>
+        </div>
+        }
+
+        <form [formGroup]="jobForm" (ngSubmit)="submit()">
+            <!-- Basic Info -->
+            <div class="card">
+                <h2>Basic Information</h2>
+
+                <div class="form-group">
+                    <label>Job Title *</label>
+                    <input type="text" formControlName="title" placeholder="e.g. Senior Software Engineer">
+                    @if (getFieldError('title')) {
+                    <span class="field-error">{{ getFieldError('title') }}</span>
+                    }
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Job Type *</label>
+                        <select formControlName="type">
+                            @for (type of jobTypes; track type.value) {
+                            <option [value]="type.value">{{ type.label }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" formControlName="location" placeholder="e.g. Paris, France or Remote">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Job Description *</label>
+                    <textarea formControlName="description" rows="6"
+                        placeholder="Describe the role, responsibilities, and what makes this opportunity exciting..."></textarea>
+                    @if (getFieldError('description')) {
+                    <span class="field-error">{{ getFieldError('description') }}</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Requirements & Benefits -->
+            <div class="card">
+                <h2>Requirements & Benefits</h2>
+
+                <div class="form-group">
+                    <label>Requirements</label>
+                    <textarea formControlName="requirements" rows="4"
+                        placeholder="List the qualifications, skills, and experience required..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Benefits</label>
+                    <textarea formControlName="benefits" rows="4"
+                        placeholder="What perks and benefits do you offer? Health insurance, remote work, etc..."></textarea>
+                </div>
+            </div>
+
+            <!-- Salary & Experience -->
+            <div class="card">
+                <h2>Compensation & Experience</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <select formControlName="salaryCurrency">
+                            @for (currency of currencies; track currency) {
+                            <option [value]="currency">{{ currency }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Minimum Salary</label>
+                        <input type="number" formControlName="salaryMin" placeholder="e.g. 50000">
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Salary</label>
+                        <input type="number" formControlName="salaryMax" placeholder="e.g. 80000">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Min Years Experience</label>
+                        <input type="number" formControlName="experienceYearsMin" min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Years Experience</label>
+                        <input type="number" formControlName="experienceYearsMax" min="0" placeholder="10">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="card">
+                <h2>Required Skills</h2>
+                <p class="card-subtitle">Select the skills required for this position</p>
+
+                <div class="skills-grid">
+                    @for (skill of skills(); track skill.id) {
+                    <button type="button" class="skill-chip" [class.selected]="isSkillSelected(skill.id)"
+                        (click)="toggleSkill(skill.id)">
+                        {{ skill.name }}
+                        <span class="category">{{ skill.category }}</span>
+                    </button>
+                    }
+                </div>
+
+                @if (selectedSkills().length > 0) {
+                <div class="selected-count">
+                    {{ selectedSkills().length }} skill(s) selected
+                </div>
+                }
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <a [routerLink]="['/company/jobs', jobId, 'candidates']" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-primary" [disabled]="saving()">
+                    @if (saving()) {
+                    <span class="spinner"></span>
+                    Saving...
+                    } @else {
+                    Save Changes
+                    }
+                </button>
+            </div>
+        </form>
+    </div>
+    }
+</div>

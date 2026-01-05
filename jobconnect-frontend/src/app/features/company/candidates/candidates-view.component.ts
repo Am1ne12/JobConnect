@@ -49,6 +49,13 @@ import { Application, JobPosting } from '../../../core/models';
             </div>
             
             <div class="header-actions">
+              <a [routerLink]="['/company/jobs', jobIdNum, 'edit']" class="edit-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit Job
+              </a>
               <div class="sort-group">
                 <span class="sort-label">Sort by</span>
                 <button class="sort-btn" [class.active]="sortBy() === 'score'" (click)="sortByScore()">
@@ -178,7 +185,26 @@ import { Application, JobPosting } from '../../../core/models';
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.75rem;
+    }
+
+    .edit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.5rem 0.875rem;
+      border-radius: var(--radius-full);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        color: var(--text-primary);
+        background: rgba(0, 0, 0, 0.04);
+      }
     }
 
     .sort-group {
