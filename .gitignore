@@ -1,0 +1,33 @@
+# Environment files
+.env
+.env.local
+
+# .NET
+JobConnect.API/bin/
+JobConnect.API/obj/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Node/Angular
+jobconnect-frontend/node_modules/
+jobconnect-frontend/dist/
+jobconnect-frontend/.angular/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/

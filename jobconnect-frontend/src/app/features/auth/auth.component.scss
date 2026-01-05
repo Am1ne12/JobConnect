@@ -1,0 +1,195 @@
+$dark-bg: #0f0f1a;
+$card-bg: rgba(255, 255, 255, 0.05);
+$text-primary: #ffffff;
+$text-secondary: rgba(255, 255, 255, 0.7);
+$border-color: rgba(255, 255, 255, 0.1);
+$primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $dark-bg;
+    padding: 2rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: $card-bg;
+    border-radius: 24px;
+    padding: 2.5rem;
+    border: 1px solid $border-color;
+    backdrop-filter: blur(10px);
+
+    &.register-card {
+        max-width: 480px;
+    }
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+
+    h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        background: $primary-gradient;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    p {
+        color: $text-secondary;
+        font-size: 0.95rem;
+    }
+}
+
+// Role Selection
+.role-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.role-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid $border-color;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    .role-icon {
+        font-size: 2rem;
+    }
+
+    .role-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: $text-primary;
+    }
+
+    .role-desc {
+        font-size: 0.75rem;
+        color: $text-secondary;
+    }
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    &.active {
+        background: rgba(102, 126, 234, 0.15);
+        border-color: #667eea;
+
+        .role-label {
+            color: #667eea;
+        }
+    }
+}
+
+// Form
+.form-group {
+    margin-bottom: 1.25rem;
+
+    label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: $text-secondary;
+        margin-bottom: 0.5rem;
+    }
+
+    input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid $border-color;
+        border-radius: 12px;
+        padding: 0.875rem 1rem;
+        color: $text-primary;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+
+        &::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+    }
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.error-message {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.btn-primary {
+    width: 100%;
+    background: $primary-gradient;
+    border: none;
+    border-radius: 12px;
+    padding: 1rem;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid $border-color;
+
+    p {
+        color: $text-secondary;
+        font-size: 0.9rem;
+    }
+
+    a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

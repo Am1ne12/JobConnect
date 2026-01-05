@@ -1,0 +1,81 @@
+<div class="kanban-container">
+    <div class="kanban-header">
+        <h2>Candidate Pipeline</h2>
+        @if (updating()) {
+        <span class="updating-badge">Saving changes...</span>
+        }
+    </div>
+
+    @if (loading()) {
+    <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading applications...</p>
+    </div>
+    } @else {
+    <div class="kanban-board" cdkDropListGroup>
+        @for (column of columns(); track column.status; let i = $index) {
+        <div class="kanban-column" [style.--column-color]="column.color">
+            <div class="column-header">
+                <span class="column-title">{{ column.title }}</span>
+                <span class="column-count">{{ column.applications.length }}</span>
+            </div>
+
+            <div class="column-content" cdkDropList [id]="'column-' + i" [cdkDropListData]="column.applications"
+                [cdkDropListConnectedTo]="getConnectedLists()" (cdkDropListDropped)="drop($event, column)">
+
+                @for (app of column.applications; track app.id) {
+                <div class="kanban-card" cdkDrag>
+                    <div class="card-drag-preview" *cdkDragPreview>
+                        <span class="preview-name">{{ app.candidateName }}</span>
+                    </div>
+
+                    <div class="card-placeholder" *cdkDragPlaceholder></div>
+
+                    <div class="card-header">
+                        <div class="candidate-info">
+                            <div class="candidate-avatar">
+                                {{ app.candidateName.charAt(0) }}
+                            </div>
+                            <div class="candidate-details">
+                                <h4>{{ app.candidateName }}</h4>
+                                <span class="applied-date">
+                                    Applied {{ app.appliedAt | date:'shortDate' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="matching-score" [ngClass]="getScoreClass(app.matchingScore)">
+                            {{ app.matchingScore }}%
+                        </div>
+                    </div>
+
+                    @if (app.candidateProfile?.skills?.length) {
+                    <div class="card-skills">
+                        @for (skill of app.candidateProfile?.skills?.slice(0, 3); track skill.skillId) {
+                        <span class="skill-tag">{{ skill.skillName }}</span>
+                        }
+                        @if ((app.candidateProfile?.skills?.length || 0) > 3) {
+                        <span class="skill-more">+{{ (app.candidateProfile?.skills?.length || 0) - 3 }}</span>
+                        }
+                    </div>
+                    }
+
+                    <div class="card-actions">
+                        <button class="btn-view" (click)="viewCandidate(app)">
+                            View Profile
+                        </button>
+                    </div>
+                </div>
+                }
+
+                @if (column.applications.length === 0) {
+                <div class="empty-column">
+                    <p>No candidates</p>
+                    <span>Drag candidates here</span>
+                </div>
+                }
+            </div>
+        </div>
+        }
+    </div>
+    }
+</div>

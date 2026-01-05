@@ -1,0 +1,71 @@
+<div class="tracker-container">
+    <div class="tracker-header">
+        <h1>My Applications</h1>
+        <p class="subtitle">Track the status of your job applications</p>
+    </div>
+
+    @if (loading()) {
+    <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading your applications...</p>
+    </div>
+    } @else if (applications().length === 0) {
+    <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No Applications Yet</h3>
+        <p>Start applying to jobs to see your applications here</p>
+        <a href="/jobs" class="btn-primary">Browse Jobs</a>
+    </div>
+    } @else {
+    <div class="applications-list">
+        @for (app of applications(); track app.id) {
+        <div class="application-card" [class.rejected]="isRejected(app.status)">
+            <div class="card-header">
+                <div class="job-info">
+                    <h3>{{ app.jobTitle }}</h3>
+                    <span class="applied-date">Applied {{ app.appliedAt | date:'mediumDate' }}</span>
+                </div>
+                <div class="matching-score" [ngClass]="getScoreClass(app.matchingScore)">
+                    <span class="score-label">Match</span>
+                    <span class="score-value">{{ app.matchingScore }}%</span>
+                </div>
+            </div>
+
+            @if (isRejected(app.status)) {
+            <div class="rejected-banner">
+                <span class="rejected-icon">❌</span>
+                <span>Application not selected</span>
+            </div>
+            } @else {
+            <div class="status-pipeline">
+                @for (step of statusSteps; track step.status; let i = $index) {
+                <div class="pipeline-step" [class.complete]="isStepComplete(app.status, step.status)"
+                    [class.current]="isStepCurrent(app.status, step.status)">
+                    <div class="step-indicator">
+                        @if (isStepComplete(app.status, step.status)) {
+                        <span class="step-check">✓</span>
+                        } @else {
+                        <span class="step-number">{{ i + 1 }}</span>
+                        }
+                    </div>
+                    <span class="step-label">{{ step.label }}</span>
+                </div>
+                @if (i < statusSteps.length - 1) { <div class="step-connector"
+                    [class.complete]="isStepComplete(app.status, statusSteps[i + 1].status)">
+            </div>
+            }
+            }
+        </div>
+        }
+
+        <div class="card-footer">
+            <span class="current-status">
+                {{ isRejected(app.status) ? 'Closed' : 'Status: ' + app.status }}
+            </span>
+            <span class="last-update">Updated {{ app.updatedAt | date:'short' }}</span>
+        </div>
+    </div>
+    }
+</div>
+}
+</div>
