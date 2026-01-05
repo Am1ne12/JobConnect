@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,6 +7,12 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { JobService } from '../../core/services/job.service';
 import { SkillService } from '../../core/services/skill.service';
 import { JobPosting, Skill } from '../../core/models';
+
+interface JobTypeOption {
+  value: string;
+  label: string;
+  icon: string;
+}
 
 @Component({
   selector: 'app-jobs-list',
@@ -38,14 +44,34 @@ import { JobPosting, Skill } from '../../core/models';
                  [(ngModel)]="searchQuery" 
                  (input)="onSearchInput()"
                  placeholder="Search jobs by title, company, skills...">
-          <select [(ngModel)]="selectedType" (change)="search()">
-            <option value="">All Types</option>
-            <option value="FullTime">Full Time</option>
-            <option value="PartTime">Part Time</option>
-            <option value="Contract">Contract</option>
-            <option value="Internship">Internship</option>
-            <option value="Remote">Remote</option>
-          </select>
+          
+          <!-- Custom Type Dropdown -->
+          <div class="custom-dropdown" [class.open]="typeDropdownOpen">
+            <button type="button" class="dropdown-trigger" (click)="toggleTypeDropdown($event)">
+              <span class="dropdown-icon">{{ getSelectedTypeIcon() }}</span>
+              <span class="dropdown-label">{{ getSelectedTypeLabel() }}</span>
+              <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            <div class="dropdown-menu">
+              @for (type of jobTypes; track type.value) {
+                <button 
+                  type="button"
+                  class="dropdown-option" 
+                  [class.selected]="selectedType === type.value"
+                  (click)="selectType(type.value)">
+                  <span class="option-icon">{{ type.icon }}</span>
+                  <span class="option-label">{{ type.label }}</span>
+                  @if (selectedType === type.value) {
+                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                  }
+                </button>
+              }
+            </div>
+          </div>
         </div>
       </div>
 
@@ -116,14 +142,32 @@ export class JobsListComponent implements OnInit, OnDestroy {
 
   searchQuery = '';
   selectedType = '';
+  typeDropdownOpen = false;
+
+  jobTypes: JobTypeOption[] = [
+    { value: '', label: 'All Types', icon: '📋' },
+    { value: 'FullTime', label: 'Full Time', icon: '💼' },
+    { value: 'PartTime', label: 'Part Time', icon: '⏰' },
+    { value: 'Contract', label: 'Contract', icon: '📝' },
+    { value: 'Internship', label: 'Internship', icon: '🎓' },
+    { value: 'Remote', label: 'Remote', icon: '🏠' }
+  ];
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
   constructor(
     private jobService: JobService,
-    private skillService: SkillService
+    private skillService: SkillService,
+    private elementRef: ElementRef
   ) { }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.typeDropdownOpen = false;
+    }
+  }
 
   ngOnInit() {
     this.loadJobs();
@@ -142,6 +186,27 @@ export class JobsListComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  toggleTypeDropdown(event: Event) {
+    event.stopPropagation();
+    this.typeDropdownOpen = !this.typeDropdownOpen;
+  }
+
+  selectType(value: string) {
+    this.selectedType = value;
+    this.typeDropdownOpen = false;
+    this.search();
+  }
+
+  getSelectedTypeLabel(): string {
+    const selected = this.jobTypes.find(t => t.value === this.selectedType);
+    return selected ? selected.label : 'All Types';
+  }
+
+  getSelectedTypeIcon(): string {
+    const selected = this.jobTypes.find(t => t.value === this.selectedType);
+    return selected ? selected.icon : '📋';
   }
 
   private loadJobs() {
