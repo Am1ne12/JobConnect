@@ -8,10 +8,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { JobPosting } from '../../core/models';
 
 @Component({
-    selector: 'app-job-detail',
-    standalone: true,
-    imports: [CommonModule, FormsModule],
-    template: `
+  selector: 'app-job-detail',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
     <div class="job-detail-page">
       @if (loading()) {
         <div class="loading-state">
@@ -105,16 +105,10 @@ import { JobPosting } from '../../core/models';
       }
     </div>
   `,
-    styles: [`
-    $dark-bg: #0f0f1a;
-    $card-bg: rgba(255, 255, 255, 0.05);
-    $text-primary: #ffffff;
-    $text-secondary: rgba(255, 255, 255, 0.7);
-    $border-color: rgba(255, 255, 255, 0.1);
-
+  styles: [`
     .job-detail-page {
       min-height: 100vh;
-      background: $dark-bg;
+      background: var(--bg-secondary);
       padding: 2rem;
     }
 
@@ -127,146 +121,164 @@ import { JobPosting } from '../../core/models';
       display: flex;
       gap: 1.5rem;
       padding: 2rem;
-      background: $card-bg;
-      border-radius: 20px;
-      border: 1px solid $border-color;
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
       margin-bottom: 2rem;
 
       .company-logo {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 16px;
+        width: 72px;
+        height: 72px;
+        background: var(--accent);
+        border-radius: var(--radius-lg);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
+        font-size: 1.75rem;
         font-weight: 700;
         color: white;
+        flex-shrink: 0;
       }
 
       h1 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: $text-primary;
+        color: var(--text-primary);
         margin-bottom: 0.25rem;
       }
 
       .company {
-        color: $text-secondary;
+        color: var(--text-secondary);
         margin-bottom: 0.75rem;
       }
     }
 
     .meta-tags {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.5rem;
 
       .tag {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--bg-tertiary);
         padding: 0.375rem 0.75rem;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        color: $text-secondary;
+        border-radius: var(--radius-full);
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
 
         &.salary {
-          color: #fcd34d;
+          color: var(--warning);
+          background: var(--warning-bg);
         }
       }
     }
 
     .job-content {
       display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 2rem;
+      grid-template-columns: 1fr 300px;
+      gap: 1.5rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
     }
 
     .main-content {
       section {
-        background: $card-bg;
-        border-radius: 16px;
+        background: var(--bg-primary);
+        border-radius: var(--radius-lg);
         padding: 1.5rem;
-        border: 1px solid $border-color;
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-xs);
         margin-bottom: 1rem;
 
         h2 {
-          font-size: 1.1rem;
+          font-size: 1rem;
           font-weight: 600;
-          color: $text-primary;
-          margin-bottom: 1rem;
+          color: var(--text-primary);
+          margin-bottom: 0.75rem;
         }
 
         p {
-          color: $text-secondary;
+          color: var(--text-secondary);
           line-height: 1.7;
           white-space: pre-wrap;
+          font-size: 0.9375rem;
         }
       }
     }
 
     .apply-card, .skills-card {
-      background: $card-bg;
-      border-radius: 16px;
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
       padding: 1.5rem;
-      border: 1px solid $border-color;
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
       margin-bottom: 1rem;
 
       h3 {
-        font-size: 1rem;
+        font-size: 0.9375rem;
         font-weight: 600;
-        color: $text-primary;
-        margin-bottom: 1rem;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
       }
 
       p {
-        color: $text-secondary;
-        font-size: 0.9rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
         margin-bottom: 1rem;
       }
 
       textarea {
         width: 100%;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid $border-color;
-        border-radius: 10px;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-md);
         padding: 0.75rem;
-        color: $text-primary;
+        color: var(--text-primary);
         resize: vertical;
         margin-bottom: 1rem;
+        font-size: 0.875rem;
+
+        &::placeholder {
+          color: var(--text-muted);
+        }
 
         &:focus {
           outline: none;
-          border-color: #667eea;
+          border-color: var(--accent-soft);
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
       }
     }
 
     .btn-apply {
       width: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--accent);
       border: none;
-      border-radius: 12px;
+      border-radius: var(--radius-full);
       padding: 0.875rem;
       color: white;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--transition-base);
 
       &:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
       }
 
       &:disabled {
-        opacity: 0.6;
+        opacity: 0.5;
         cursor: not-allowed;
       }
     }
 
     .applied-badge {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: var(--success);
       padding: 0.75rem;
-      border-radius: 10px;
+      border-radius: var(--radius-md);
       color: white;
       font-weight: 600;
       text-align: center;
@@ -280,20 +292,25 @@ import { JobPosting } from '../../core/models';
     }
 
     .skill-chip {
-      background: rgba(102, 126, 234, 0.2);
-      color: #a5b4fc;
+      background: var(--accent-soft-bg);
+      color: var(--accent-soft);
       padding: 0.375rem 0.75rem;
-      border-radius: 8px;
-      font-size: 0.85rem;
+      border-radius: var(--radius-full);
+      font-size: 0.8125rem;
 
       .required-badge {
-        font-size: 0.65rem;
-        background: rgba(245, 158, 11, 0.3);
-        color: #fcd34d;
+        font-size: 0.625rem;
+        background: var(--warning-bg);
+        color: var(--warning);
         padding: 0.125rem 0.375rem;
         border-radius: 4px;
         margin-left: 0.375rem;
       }
+    }
+
+    .info-text {
+      color: var(--text-muted);
+      font-size: 0.875rem;
     }
 
     .loading-state {
@@ -303,12 +320,12 @@ import { JobPosting } from '../../core/models';
       min-height: 60vh;
 
       .spinner {
-        width: 48px;
-        height: 48px;
-        border: 3px solid rgba(255, 255, 255, 0.1);
-        border-top-color: #667eea;
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--border-default);
+        border-top-color: var(--accent);
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        animation: spin 0.7s linear infinite;
       }
     }
 
@@ -318,52 +335,52 @@ import { JobPosting } from '../../core/models';
   `]
 })
 export class JobDetailComponent implements OnInit {
-    @Input() id!: string;
+  @Input() id!: string;
 
-    job = signal<JobPosting | null>(null);
-    loading = signal(true);
-    applying = signal(false);
-    applied = signal(false);
-    coverLetter = '';
+  job = signal<JobPosting | null>(null);
+  loading = signal(true);
+  applying = signal(false);
+  applied = signal(false);
+  coverLetter = '';
 
-    constructor(
-        private jobService: JobService,
-        private applicationService: ApplicationService,
-        public authService: AuthService,
-        private router: Router
-    ) { }
+  constructor(
+    private jobService: JobService,
+    private applicationService: ApplicationService,
+    public authService: AuthService,
+    private router: Router
+  ) { }
 
-    ngOnInit() {
-        this.loadJob();
-    }
+  ngOnInit() {
+    this.loadJob();
+  }
 
-    private loadJob() {
-        this.jobService.getJob(parseInt(this.id)).subscribe({
-            next: (job) => {
-                this.job.set(job);
-                this.loading.set(false);
-            },
-            error: () => {
-                this.loading.set(false);
-                this.router.navigate(['/jobs']);
-            }
-        });
-    }
+  private loadJob() {
+    this.jobService.getJob(parseInt(this.id)).subscribe({
+      next: (job) => {
+        this.job.set(job);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.router.navigate(['/jobs']);
+      }
+    });
+  }
 
-    apply() {
-        if (!this.job()) return;
+  apply() {
+    if (!this.job()) return;
 
-        this.applying.set(true);
-        this.applicationService.apply(this.job()!.id, this.coverLetter || undefined).subscribe({
-            next: () => {
-                this.applying.set(false);
-                this.applied.set(true);
-            },
-            error: () => this.applying.set(false)
-        });
-    }
+    this.applying.set(true);
+    this.applicationService.apply(this.job()!.id, this.coverLetter || undefined).subscribe({
+      next: () => {
+        this.applying.set(false);
+        this.applied.set(true);
+      },
+      error: () => this.applying.set(false)
+    });
+  }
 
-    goToLogin() {
-        this.router.navigate(['/login']);
-    }
+  goToLogin() {
+    this.router.navigate(['/login']);
+  }
 }

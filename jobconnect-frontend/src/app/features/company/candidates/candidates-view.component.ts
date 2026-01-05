@@ -6,10 +6,10 @@ import { JobService } from '../../../core/services/job.service';
 import { Application, JobPosting } from '../../../core/models';
 
 @Component({
-    selector: 'app-candidates-view',
-    standalone: true,
-    imports: [CommonModule, KanbanBoardComponent],
-    template: `
+  selector: 'app-candidates-view',
+  standalone: true,
+  imports: [CommonModule, KanbanBoardComponent],
+  template: `
     <div class="candidates-page">
       @if (loading()) {
         <div class="loading-state">
@@ -35,10 +35,10 @@ import { Application, JobPosting } from '../../../core/models';
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     .candidates-page {
       min-height: 100vh;
-      background: #0f0f1a;
+      background: var(--bg-secondary);
     }
 
     .page-header {
@@ -48,40 +48,40 @@ import { Application, JobPosting } from '../../../core/models';
       padding: 2rem 2rem 0;
 
       h1 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: white;
+        color: var(--text-primary);
         margin-bottom: 0.25rem;
       }
 
       p {
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--text-secondary);
       }
     }
 
     .filter-controls {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .filter-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 0.625rem 1rem;
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 0.875rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-full);
+      padding: 0.5rem 1rem;
+      color: var(--text-secondary);
+      font-size: 0.8125rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--transition-fast);
 
       &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--border-strong);
       }
 
       &.active {
-        background: rgba(102, 126, 234, 0.2);
-        border-color: #667eea;
-        color: #667eea;
+        background: var(--accent-soft-bg);
+        border-color: var(--accent-soft);
+        color: var(--accent-soft);
       }
     }
 
@@ -92,12 +92,12 @@ import { Application, JobPosting } from '../../../core/models';
       min-height: 60vh;
 
       .spinner {
-        width: 48px;
-        height: 48px;
-        border: 3px solid rgba(255, 255, 255, 0.1);
-        border-top-color: #667eea;
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--border-default);
+        border-top-color: var(--accent);
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        animation: spin 0.7s linear infinite;
       }
     }
 
@@ -107,33 +107,33 @@ import { Application, JobPosting } from '../../../core/models';
   `]
 })
 export class CandidatesViewComponent implements OnInit {
-    @Input() id!: string;
+  @Input() id!: string;
 
-    job = signal<JobPosting | null>(null);
-    loading = signal(true);
-    sortBy = signal<'score' | 'date'>('score');
+  job = signal<JobPosting | null>(null);
+  loading = signal(true);
+  sortBy = signal<'score' | 'date'>('score');
 
-    get jobIdNum(): number {
-        return parseInt(this.id);
-    }
+  get jobIdNum(): number {
+    return parseInt(this.id);
+  }
 
-    constructor(private jobService: JobService) { }
+  constructor(private jobService: JobService) { }
 
-    ngOnInit() {
-        this.jobService.getJob(this.jobIdNum).subscribe({
-            next: (job) => {
-                this.job.set(job);
-                this.loading.set(false);
-            },
-            error: () => this.loading.set(false)
-        });
-    }
+  ngOnInit() {
+    this.jobService.getJob(this.jobIdNum).subscribe({
+      next: (job) => {
+        this.job.set(job);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
 
-    sortByScore() {
-        this.sortBy.set('score');
-    }
+  sortByScore() {
+    this.sortBy.set('score');
+  }
 
-    sortByDate() {
-        this.sortBy.set('date');
-    }
+  sortByDate() {
+    this.sortBy.set('date');
+  }
 }

@@ -6,10 +6,10 @@ import { JobService } from '../../../core/services/job.service';
 import { Company, JobPosting } from '../../../core/models';
 
 @Component({
-    selector: 'app-company-dashboard',
-    standalone: true,
-    imports: [CommonModule, RouterLink],
-    template: `
+  selector: 'app-company-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
     <div class="dashboard">
       <div class="dashboard-header">
         <div class="header-content">
@@ -77,17 +77,13 @@ import { Company, JobPosting } from '../../../core/models';
       </div>
     </div>
   `,
-    styles: [`
-    $dark-bg: #0f0f1a;
-    $card-bg: rgba(255, 255, 255, 0.05);
-    $text-primary: #ffffff;
-    $text-secondary: rgba(255, 255, 255, 0.7);
-    $border-color: rgba(255, 255, 255, 0.1);
-
+  styles: [`
     .dashboard {
       min-height: 100vh;
-      background: $dark-bg;
+      background: var(--bg-secondary);
       padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
     .dashboard-header {
@@ -97,40 +93,39 @@ import { Company, JobPosting } from '../../../core/models';
       margin-bottom: 2rem;
 
       h1 {
-        font-size: 2rem;
+        font-size: 1.75rem;
         font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
       }
 
       p {
-        color: $text-secondary;
+        color: var(--text-secondary);
         margin-top: 0.25rem;
       }
     }
 
     .btn-create {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--accent);
       border: none;
-      border-radius: 12px;
-      padding: 0.875rem 1.5rem;
+      border-radius: var(--radius-full);
+      padding: 0.75rem 1.5rem;
       color: white;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--transition-base);
 
       &:hover {
+        background: var(--accent-hover);
         transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        box-shadow: var(--shadow-lg);
       }
     }
 
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
+      gap: 1.25rem;
       margin-bottom: 2rem;
     }
 
@@ -138,13 +133,14 @@ import { Company, JobPosting } from '../../../core/models';
       display: flex;
       align-items: center;
       gap: 1rem;
-      background: $card-bg;
-      border-radius: 16px;
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
       padding: 1.5rem;
-      border: 1px solid $border-color;
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
 
       .stat-icon {
-        font-size: 2rem;
+        font-size: 1.75rem;
       }
 
       .stat-info {
@@ -153,50 +149,52 @@ import { Company, JobPosting } from '../../../core/models';
       }
 
       .stat-value {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: $text-primary;
+        color: var(--text-primary);
       }
 
       .stat-label {
-        font-size: 0.875rem;
-        color: $text-secondary;
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
       }
     }
 
     .jobs-section {
       h2 {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
         font-weight: 600;
-        color: $text-primary;
-        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1.25rem;
       }
     }
 
     .jobs-list {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .job-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: $card-bg;
-      border-radius: 16px;
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
       padding: 1.25rem 1.5rem;
-      border: 1px solid $border-color;
-      transition: all 0.2s ease;
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-xs);
+      transition: all var(--transition-base);
 
       &:hover {
-        border-color: rgba(102, 126, 234, 0.3);
+        border-color: var(--border-default);
+        box-shadow: var(--shadow-md);
       }
 
       h3 {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 600;
-        color: $text-primary;
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
       }
     }
@@ -204,107 +202,124 @@ import { Company, JobPosting } from '../../../core/models';
     .job-meta {
       display: flex;
       gap: 0.75rem;
-      font-size: 0.85rem;
+      font-size: 0.8125rem;
 
       .status {
         padding: 0.25rem 0.625rem;
-        border-radius: 6px;
+        border-radius: var(--radius-full);
         font-weight: 500;
+        font-size: 0.75rem;
 
         &.published {
-          background: rgba(16, 185, 129, 0.2);
-          color: #10b981;
+          background: var(--success-bg);
+          color: var(--success);
         }
 
         &.draft {
-          background: rgba(245, 158, 11, 0.2);
-          color: #f59e0b;
+          background: var(--warning-bg);
+          color: var(--warning);
         }
 
         &.closed {
-          background: rgba(239, 68, 68, 0.2);
-          color: #ef4444;
+          background: var(--error-bg);
+          color: var(--error);
         }
       }
 
       .type, .location {
-        color: $text-secondary;
+        color: var(--text-secondary);
       }
     }
 
     .job-stats {
       .applicants {
-        background: rgba(102, 126, 234, 0.15);
-        color: #a5b4fc;
+        background: var(--accent-soft-bg);
+        color: var(--accent-soft);
         padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.875rem;
+        border-radius: var(--radius-full);
+        font-size: 0.8125rem;
         font-weight: 500;
       }
     }
 
     .btn-view {
       background: transparent;
-      border: 1px solid rgba(102, 126, 234, 0.5);
-      border-radius: 10px;
-      padding: 0.625rem 1.25rem;
-      color: #667eea;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-full);
+      padding: 0.5rem 1rem;
+      color: var(--text-secondary);
       text-decoration: none;
+      font-size: 0.8125rem;
       font-weight: 500;
-      transition: all 0.2s ease;
+      transition: all var(--transition-fast);
 
       &:hover {
-        background: rgba(102, 126, 234, 0.1);
-        border-color: #667eea;
+        border-color: var(--accent-soft);
+        color: var(--accent-soft);
+        background: var(--accent-soft-bg);
       }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
     }
 
     .empty-state {
       text-align: center;
       padding: 3rem;
-      color: $text-secondary;
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      color: var(--text-secondary);
 
       .btn-primary {
         margin-top: 1rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--accent);
         border: none;
-        border-radius: 12px;
-        padding: 0.875rem 1.5rem;
+        border-radius: var(--radius-full);
+        padding: 0.75rem 1.5rem;
         color: white;
         font-weight: 600;
         cursor: pointer;
+        transition: all var(--transition-base);
+
+        &:hover {
+          background: var(--accent-hover);
+        }
       }
     }
   `]
 })
 export class CompanyDashboardComponent implements OnInit {
-    company = signal<Company | null>(null);
-    jobs = signal<JobPosting[]>([]);
-    loading = signal(true);
+  company = signal<Company | null>(null);
+  jobs = signal<JobPosting[]>([]);
+  loading = signal(true);
 
-    totalApplications = signal(0);
+  totalApplications = signal(0);
 
-    constructor(
-        private companyService: CompanyService,
-        private jobService: JobService
-    ) { }
+  constructor(
+    private companyService: CompanyService,
+    private jobService: JobService
+  ) { }
 
-    ngOnInit() {
-        this.loadData();
-    }
+  ngOnInit() {
+    this.loadData();
+  }
 
-    private loadData() {
-        this.companyService.getProfile().subscribe(company => {
-            this.company.set(company);
-        });
+  private loadData() {
+    this.companyService.getProfile().subscribe(company => {
+      this.company.set(company);
+    });
 
-        this.companyService.getJobs().subscribe({
-            next: (jobs) => {
-                this.jobs.set(jobs);
-                this.totalApplications.set(jobs.reduce((sum, job) => sum + job.applicationCount, 0));
-                this.loading.set(false);
-            },
-            error: () => this.loading.set(false)
-        });
-    }
+    this.companyService.getJobs().subscribe({
+      next: (jobs) => {
+        this.jobs.set(jobs);
+        this.totalApplications.set(jobs.reduce((sum, job) => sum + job.applicationCount, 0));
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
 }
