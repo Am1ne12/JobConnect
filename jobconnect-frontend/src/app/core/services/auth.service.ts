@@ -5,26 +5,132 @@ import { Observable, tap } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest, UserRole } from '../models';
 import { environment } from '../../../environments/environment';
 
+interface JwtPayload {
+    sub: string;
+    email: string;
+    role: string;
+    exp: number;
+    iat?: number;
+}
+
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
     private readonly API_URL = `${environment.apiUrl}/auth`;
 
-    private tokenSignal = signal<string | null>(localStorage.getItem('token'));
+    private tokenSignal = signal<string | null>(this.getValidToken());
     private userSignal = signal<AuthResponse | null>(this.loadUserFromStorage());
 
-    readonly isAuthenticated = computed(() => !!this.tokenSignal());
+    readonly isAuthenticated = computed(() => !!this.tokenSignal() && !this.isTokenExpired());
     readonly currentUser = computed(() => this.userSignal());
     readonly userRole = computed(() => this.userSignal()?.role ?? null);
     readonly isCandidate = computed(() => this.userRole() === 'Candidate');
     readonly isCompany = computed(() => this.userRole() === 'Company');
 
-    constructor(private http: HttpClient, private router: Router) { }
+    constructor(private http: HttpClient, private router: Router) {
+        // Validate token on service initialization
+        this.validateStoredToken();
+    }
+
+    /**
+     * Get the stored token, validating it's not expired
+     */
+    private getValidToken(): string | null {
+        const token = localStorage.getItem('token');
+        if (token && this.isTokenExpiredByValue(token)) {
+            // Token is expired, clear it
+            this.clearStorage();
+            return null;
+        }
+        return token;
+    }
+
+    /**
+     * Validate stored token on initialization and clear if expired
+     */
+    private validateStoredToken(): void {
+        const token = localStorage.getItem('token');
+        if (token && this.isTokenExpiredByValue(token)) {
+            console.log('Stored token has expired, clearing auth state');
+            this.clearStorage();
+            this.tokenSignal.set(null);
+            this.userSignal.set(null);
+        }
+    }
+
+    /**
+     * Decode a JWT token and return its payload
+     */
+    private decodeToken(token: string): JwtPayload | null {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                return null;
+            }
+            const payload = parts[1];
+            const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+            return JSON.parse(decoded);
+        } catch (error) {
+            console.error('Failed to decode token:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Check if the current token is expired
+     */
+    isTokenExpired(): boolean {
+        const token = this.tokenSignal();
+        if (!token) {
+            return true;
+        }
+        return this.isTokenExpiredByValue(token);
+    }
+
+    /**
+     * Check if a specific token value is expired
+     */
+    private isTokenExpiredByValue(token: string): boolean {
+        const payload = this.decodeToken(token);
+        if (!payload || !payload.exp) {
+            return true;
+        }
+        // exp is in seconds, Date.now() is in milliseconds
+        // Add a 60-second buffer to handle clock skew
+        const expirationTime = payload.exp * 1000;
+        const currentTime = Date.now();
+        return currentTime >= expirationTime - 60000;
+    }
+
+    /**
+     * Get the token expiration time in milliseconds
+     */
+    getTokenExpirationTime(): number | null {
+        const token = this.tokenSignal();
+        if (!token) {
+            return null;
+        }
+        const payload = this.decodeToken(token);
+        if (!payload || !payload.exp) {
+            return null;
+        }
+        return payload.exp * 1000;
+    }
 
     private loadUserFromStorage(): AuthResponse | null {
+        const token = localStorage.getItem('token');
+        // Don't load user if token is expired
+        if (token && this.isTokenExpiredByValue(token)) {
+            return null;
+        }
         const stored = localStorage.getItem('user');
         return stored ? JSON.parse(stored) : null;
+    }
+
+    private clearStorage(): void {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
     }
 
     register(request: RegisterRequest): Observable<AuthResponse> {
@@ -38,8 +144,7 @@ export class AuthService {
     }
 
     logout(): void {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        this.clearStorage();
         this.tokenSignal.set(null);
         this.userSignal.set(null);
         this.router.navigate(['/login']);
