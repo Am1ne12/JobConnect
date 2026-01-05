@@ -109,7 +109,7 @@ import { Application, JobPosting } from '../../../core/models';
       align-items: center;
       justify-content: space-between;
       gap: 1.5rem;
-      max-width: 1400px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 0.75rem 1rem;
       background: var(--bg-glass-strong);
