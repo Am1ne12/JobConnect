@@ -750,18 +750,16 @@
         display: none;
     }
 
+    /* Search Box - Stack vertically on mobile */
     .search-box {
-        gap: 0.5rem;
+        flex-direction: column;
+        gap: 0.75rem;
 
-        input {
-            padding: 0.875rem 1rem 0.875rem 2.75rem;
-            font-size: 16px;
-            /* Prevents iOS zoom */
-            border-radius: var(--radius-lg);
-        }
-
+        /* Keep search icon positioned relative to input */
         .search-icon {
+            top: 50%;
             left: 1rem;
+            transform: translateY(-50%);
 
             svg {
                 width: 18px;
@@ -769,12 +767,11 @@
             }
         }
 
-        .custom-dropdown {
-            min-width: 100%;
-        }
-
-        .dropdown-trigger {
-            padding: 0.875rem 1rem;
+        input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            font-size: 16px;
+            /* Prevents iOS zoom */
             border-radius: var(--radius-lg);
         }
     }
@@ -784,15 +781,18 @@
     }
 
     .jobs-list {
-        gap: 0.625rem;
+        gap: 0.75rem;
     }
 
     /* Mobile-native job cards */
     .job-item {
-        flex-wrap: wrap;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
         padding: 1rem;
         border-radius: var(--radius-lg);
-        gap: 0.625rem;
+        gap: 0.75rem;
+        position: relative;
 
         /* Active state for touch */
         &:active {
@@ -805,20 +805,26 @@
         }
     }
 
+    /* Top row: logo + info side by side */
     .job-logo {
-        width: 40px;
-        height: 40px;
-        font-size: 0.875rem;
-        border-radius: var(--radius-sm);
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+        border-radius: var(--radius-md);
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
     }
 
     .job-info {
-        flex: 1;
-        min-width: calc(100% - 60px);
+        width: 100%;
+        padding-left: 56px;
+        /* Make room for logo */
+        min-width: unset;
 
         h3 {
             font-size: 0.9375rem;
-            margin-bottom: 0.125rem;
+            margin-bottom: 0.25rem;
             white-space: normal;
             line-height: 1.3;
         }
@@ -829,24 +835,25 @@
     }
 
     .job-meta {
-        order: 3;
         width: 100%;
-        margin-top: 0.25rem;
+        order: unset;
+        margin-top: 0;
 
         .tag {
-            padding: 0.25rem 0.5rem;
+            padding: 0.25rem 0.625rem;
             font-size: 0.6875rem;
         }
     }
 
     .job-salary {
-        order: 4;
         width: 100%;
         text-align: left;
-        margin-top: 0.25rem;
+        order: unset;
+        margin-top: 0;
 
         .salary {
             font-size: 0.875rem;
+            font-weight: 600;
             color: var(--success);
         }
     }
@@ -859,6 +866,7 @@
 
         .applicants {
             font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
         }
 
         .posted {
@@ -896,12 +904,16 @@
         font-size: 1.375rem;
     }
 
-    .job-info h3 {
-        font-size: 0.875rem;
+    .job-info {
+        padding-left: 52px;
+
+        h3 {
+            font-size: 0.875rem;
+        }
     }
 
     .job-logo {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
     }
 }
