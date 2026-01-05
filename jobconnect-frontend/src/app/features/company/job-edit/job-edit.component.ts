@@ -4,7 +4,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { JobService } from '../../../core/services/job.service';
 import { SkillService } from '../../../core/services/skill.service';
-import { Skill, JobType, JobPosting } from '../../../core/models';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Skill, JobType, JobPosting, JobStatus } from '../../../core/models';
 
 @Component({
     selector: 'app-job-edit',
@@ -43,23 +44,21 @@ export class JobEditComponent implements OnInit {
         private fb: FormBuilder,
         private jobService: JobService,
         private skillService: SkillService,
+        private notificationService: NotificationService,
         private router: Router
     ) {
         this.initForm();
     }
 
     ngOnInit() {
-        // Load skills
         this.skillService.getSkills().subscribe(skills => {
             this.skills.set(skills);
         });
 
-        // Load job data
         this.jobService.getJob(this.jobId).subscribe({
             next: (job) => {
                 this.job.set(job);
                 this.populateForm(job);
-                // Set publish based on current status
                 this.shouldPublish.set(job.status === 'Published');
                 this.loading.set(false);
             },
@@ -87,7 +86,6 @@ export class JobEditComponent implements OnInit {
     }
 
     private populateForm(job: JobPosting) {
-        // Map job type string to enum value
         const typeValue = this.getJobTypeValue(job.jobType);
 
         this.jobForm.patchValue({
@@ -104,7 +102,6 @@ export class JobEditComponent implements OnInit {
             experienceYearsMax: job.experienceYearsMax
         });
 
-        // Set selected skills
         if (job.requiredSkills) {
             this.selectedSkills.set(job.requiredSkills.map(s => s.skillId));
         }
@@ -160,6 +157,7 @@ export class JobEditComponent implements OnInit {
             salaryCurrency: formValue.salaryCurrency || undefined,
             experienceYearsMin: formValue.experienceYearsMin || undefined,
             experienceYearsMax: formValue.experienceYearsMax || undefined,
+            status: this.shouldPublish() ? JobStatus.Published : JobStatus.Draft,
             requiredSkills: this.selectedSkills().map(skillId => ({
                 skillId,
                 isRequired: true
@@ -168,26 +166,17 @@ export class JobEditComponent implements OnInit {
 
         this.jobService.updateJob(this.jobId, jobData).subscribe({
             next: () => {
-                if (this.shouldPublish() && this.job()?.status !== 'Published') {
-                    // Publish the job after update
-                    this.jobService.publishJob(this.jobId).subscribe({
-                        next: () => {
-                            this.saving.set(false);
-                            this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
-                        },
-                        error: () => {
-                            this.saving.set(false);
-                            this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
-                        }
-                    });
-                } else {
-                    this.saving.set(false);
-                    this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
-                }
+                this.saving.set(false);
+                const message = this.shouldPublish()
+                    ? 'Job updated and published successfully!'
+                    : 'Job saved as draft successfully!';
+                this.notificationService.success(message);
+                this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
             },
             error: (err) => {
                 this.saving.set(false);
                 this.error.set(err.error?.message || 'Failed to update job. Please try again.');
+                this.notificationService.error('Failed to update job. Please try again.');
             }
         });
     }

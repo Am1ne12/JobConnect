@@ -1,9 +1,10 @@
 import { Component, OnInit, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { KanbanBoardComponent } from '../kanban-board/kanban-board.component';
 import { CompanyService } from '../../../core/services/company.service';
 import { JobService } from '../../../core/services/job.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { Application, JobPosting } from '../../../core/models';
 
 @Component({
@@ -54,8 +55,15 @@ import { Application, JobPosting } from '../../../core/models';
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
-                Edit Job
+                Edit
               </a>
+              <button class="delete-btn" (click)="confirmDelete()" [disabled]="deleting()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                @if (deleting()) { Deleting... } @else { Delete }
+              </button>
               <div class="sort-group">
                 <span class="sort-label">Sort by</span>
                 <button class="sort-btn" [class.active]="sortBy() === 'score'" (click)="sortByScore()">
@@ -207,6 +215,31 @@ import { Application, JobPosting } from '../../../core/models';
       }
     }
 
+    .delete-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.5rem 0.875rem;
+      border-radius: var(--radius-full);
+      border: none;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover:not(:disabled) {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.08);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
     .sort-group {
       display: flex;
       align-items: center;
@@ -281,13 +314,18 @@ export class CandidatesViewComponent implements OnInit {
 
   job = signal<JobPosting | null>(null);
   loading = signal(true);
+  deleting = signal(false);
   sortBy = signal<'score' | 'date'>('score');
 
   get jobIdNum(): number {
     return parseInt(this.id);
   }
 
-  constructor(private jobService: JobService) { }
+  constructor(
+    private jobService: JobService,
+    private notificationService: NotificationService,
+    private router: Router
+  ) { }
 
   ngOnInit() {
     this.jobService.getJob(this.jobIdNum).subscribe({
@@ -305,5 +343,27 @@ export class CandidatesViewComponent implements OnInit {
 
   sortByDate() {
     this.sortBy.set('date');
+  }
+
+  confirmDelete() {
+    const confirmed = confirm(`Are you sure you want to delete "${this.job()?.title}"? This action cannot be undone.`);
+    if (confirmed) {
+      this.deleteJob();
+    }
+  }
+
+  deleteJob() {
+    this.deleting.set(true);
+    this.jobService.deleteJob(this.jobIdNum).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.notificationService.success('Job deleted successfully!');
+        this.router.navigate(['/company/dashboard']);
+      },
+      error: () => {
+        this.deleting.set(false);
+        this.notificationService.error('Failed to delete job. Please try again.');
+      }
+    });
   }
 }

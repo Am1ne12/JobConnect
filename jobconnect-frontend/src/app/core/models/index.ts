@@ -96,10 +96,10 @@ export interface Company {
 
 // Job types
 export enum JobStatus {
-    Draft = 'Draft',
-    Published = 'Published',
-    Closed = 'Closed',
-    Archived = 'Archived'
+    Draft = 0,
+    Published = 1,
+    Closed = 2,
+    Archived = 3
 }
 
 export enum JobType {

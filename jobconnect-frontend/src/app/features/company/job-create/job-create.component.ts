@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } fr
 import { Router, RouterLink } from '@angular/router';
 import { JobService } from '../../../core/services/job.service';
 import { SkillService } from '../../../core/services/skill.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { Skill, JobType, CreateJobRequest } from '../../../core/models';
 
 @Component({
@@ -35,6 +36,7 @@ export class JobCreateComponent implements OnInit {
         private fb: FormBuilder,
         private jobService: JobService,
         private skillService: SkillService,
+        private notificationService: NotificationService,
         private router: Router
     ) {
         this.initForm();
@@ -110,25 +112,28 @@ export class JobCreateComponent implements OnInit {
         this.jobService.createJob(jobData).subscribe({
             next: (job) => {
                 if (this.publishNow()) {
-                    // Publish the job immediately after creation
                     this.jobService.publishJob(job.id).subscribe({
                         next: () => {
                             this.saving.set(false);
+                            this.notificationService.success('Job created and published successfully!');
                             this.router.navigate(['/company/dashboard']);
                         },
                         error: () => {
                             this.saving.set(false);
+                            this.notificationService.success('Job created! Publishing failed, saved as draft.');
                             this.router.navigate(['/company/dashboard']);
                         }
                     });
                 } else {
                     this.saving.set(false);
+                    this.notificationService.success('Job saved as draft successfully!');
                     this.router.navigate(['/company/dashboard']);
                 }
             },
             error: (err) => {
                 this.saving.set(false);
                 this.error.set(err.error?.message || 'Failed to create job. Please try again.');
+                this.notificationService.error('Failed to create job. Please try again.');
             }
         });
     }

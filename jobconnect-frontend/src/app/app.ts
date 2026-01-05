@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
+import { NotificationService } from './core/services/notification.service';
 
 @Component({
   selector: 'app-root',
@@ -55,6 +56,16 @@ import { AuthService } from './core/services/auth.service';
       <footer class="copyright-bar">
         <p>© 2026 JobConnect. All rights reserved.</p>
       </footer>
+
+      <!-- Notifications -->
+      <div class="notifications-container">
+        @for (notification of notificationService.notifications(); track notification.id) {
+          <div class="notification" [class]="notification.type">
+            <span class="notification-message">{{ notification.message }}</span>
+            <button class="notification-close" (click)="notificationService.dismiss(notification.id)">×</button>
+          </div>
+        }
+      </div>
     </div>
   `,
   styles: [`
@@ -244,8 +255,99 @@ import { AuthService } from './core/services/auth.service';
         padding: 0.5rem 0.75rem;
       }
     }
+
+    /* Notifications */
+    .notifications-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      z-index: 1000;
+      max-width: 400px;
+    }
+
+    .notification {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-lg);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-xl);
+      animation: slideIn 0.3s ease;
+
+      &.success {
+        border-left: 4px solid #10b981;
+        .notification-message::before {
+          content: '✓ ';
+          color: #10b981;
+        }
+      }
+
+      &.error {
+        border-left: 4px solid #ef4444;
+        .notification-message::before {
+          content: '✕ ';
+          color: #ef4444;
+        }
+      }
+
+      &.warning {
+        border-left: 4px solid #f59e0b;
+        .notification-message::before {
+          content: '⚠ ';
+          color: #f59e0b;
+        }
+      }
+
+      &.info {
+        border-left: 4px solid #6366f1;
+        .notification-message::before {
+          content: 'ℹ ';
+          color: #6366f1;
+        }
+      }
+    }
+
+    .notification-message {
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+    }
+
+    .notification-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      transition: color var(--transition-fast);
+
+      &:hover {
+        color: var(--text-primary);
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
   `]
 })
 export class App {
-  constructor(public authService: AuthService) { }
+  constructor(
+    public authService: AuthService,
+    public notificationService: NotificationService
+  ) { }
 }
