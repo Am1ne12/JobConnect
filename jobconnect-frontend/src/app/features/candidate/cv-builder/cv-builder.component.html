@@ -191,17 +191,6 @@
           </div>
           }
         </div>
-
-        <!-- Autosave Status -->
-        <div class="autosave-status" [class.saving]="saving()" [class.saved]="!saving()">
-          @if (saving()) {
-          <span class="status-icon">⟳</span>
-          <span>Saving...</span>
-          } @else {
-          <span class="status-icon">✓</span>
-          <span>All changes saved</span>
-          }
-        </div>
       </form>
     </div>
 
@@ -209,10 +198,21 @@
     <div class="preview-section">
       <div class="preview-header">
         <h2>Live Preview</h2>
-        <span class="preview-badge">
-          <span class="pulse-dot"></span>
-          Real-time
-        </span>
+        <div class="preview-badges">
+          <div class="autosave-status" [class.saving]="saving()" [class.saved]="!saving()">
+            @if (saving()) {
+            <span class="status-icon">⟳</span>
+            <span>Saving...</span>
+            } @else {
+            <span class="status-icon">✓</span>
+            <span>Saved</span>
+            }
+          </div>
+          <span class="preview-badge">
+            <span class="pulse-dot"></span>
+            Real-time
+          </span>
+        </div>
       </div>
 
       <div class="cv-preview" *ngIf="previewData()">

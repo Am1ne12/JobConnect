@@ -597,6 +597,12 @@
   }
 }
 
+.preview-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .preview-badge {
   display: flex;
   align-items: center;
