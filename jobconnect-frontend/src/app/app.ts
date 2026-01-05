@@ -52,9 +52,9 @@ import { NotificationService } from './core/services/notification.service';
       </nav>
 
       <!-- Mobile Navigation Drawer -->
-      @if (mobileMenuOpen()) {
-        <div class="mobile-overlay" (click)="closeMobileMenu()"></div>
-        <div class="mobile-drawer">
+      @if (mobileMenuOpen() || mobileMenuClosing()) {
+        <div class="mobile-overlay" [class.closing]="mobileMenuClosing()" (click)="closeMobileMenu()"></div>
+        <div class="mobile-drawer" [class.closing]="mobileMenuClosing()">
           <div class="mobile-drawer-header">
             <span class="mobile-drawer-title">Menu</span>
             <button class="mobile-close-btn" (click)="closeMobileMenu()">
@@ -319,7 +319,10 @@ import { NotificationService } from './core/services/notification.service';
         height: 2px;
         background: var(--text-primary);
         border-radius: 1px;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: center;
+        transform: rotate(0) translate(0, 0);
+        opacity: 1;
       }
 
       &.active {
@@ -328,6 +331,7 @@ import { NotificationService } from './core/services/notification.service';
         }
         .hamburger-line:nth-child(2) {
           opacity: 0;
+          transform: scaleX(0);
         }
         .hamburger-line:nth-child(3) {
           transform: rotate(-45deg) translate(5px, -5px);
@@ -351,6 +355,11 @@ import { NotificationService } from './core/services/notification.service';
       to { opacity: 1; }
     }
 
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
     /* Mobile Drawer */
     .mobile-drawer {
       position: fixed;
@@ -364,12 +373,25 @@ import { NotificationService } from './core/services/notification.service';
       display: flex;
       flex-direction: column;
       box-shadow: var(--shadow-xl);
-      animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+      &.closing {
+        animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+    }
+
+    .mobile-overlay.closing {
+      animation: fadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
     @keyframes slideIn {
       from { transform: translateX(100%); }
       to { transform: translateX(0); }
+    }
+
+    @keyframes slideOut {
+      from { transform: translateX(0); }
+      to { transform: translateX(100%); }
     }
 
     .mobile-drawer-header {
@@ -644,6 +666,7 @@ import { NotificationService } from './core/services/notification.service';
 })
 export class App {
   mobileMenuOpen = signal(false);
+  mobileMenuClosing = signal(false);
 
   constructor(
     public authService: AuthService,
@@ -651,17 +674,24 @@ export class App {
   ) { }
 
   toggleMobileMenu() {
-    this.mobileMenuOpen.update(v => !v);
     if (this.mobileMenuOpen()) {
-      document.body.style.overflow = 'hidden';
+      this.closeMobileMenu();
     } else {
-      document.body.style.overflow = '';
+      this.mobileMenuOpen.set(true);
+      document.body.style.overflow = 'hidden';
     }
   }
 
   closeMobileMenu() {
-    this.mobileMenuOpen.set(false);
+    if (!this.mobileMenuOpen() || this.mobileMenuClosing()) return;
+
+    this.mobileMenuClosing.set(true);
     document.body.style.overflow = '';
+
+    setTimeout(() => {
+      this.mobileMenuOpen.set(false);
+      this.mobileMenuClosing.set(false);
+    }, 300); // Match animation duration
   }
 
   handleLogout() {
