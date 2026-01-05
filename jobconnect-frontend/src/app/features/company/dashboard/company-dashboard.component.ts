@@ -148,7 +148,7 @@ import { Company, JobPosting } from '../../../core/models';
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.25rem;
+      gap: 1rem;
       margin-bottom: 2rem;
     }
 
@@ -158,7 +158,7 @@ import { Company, JobPosting } from '../../../core/models';
       gap: 1rem;
       background: var(--bg-primary);
       border-radius: var(--radius-xl);
-      padding: 1.5rem;
+      padding: 1.25rem 1.5rem;
       border: 1px solid var(--border-light);
       box-shadow: var(--shadow-sm);
       animation: fadeInUp 0.5s ease backwards;
@@ -174,18 +174,28 @@ import { Company, JobPosting } from '../../../core/models';
       &:nth-child(2) { animation-delay: 0.25s; }
 
       .stat-icon {
-        font-size: 1.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12));
+        border-radius: var(--radius-lg);
+        flex-shrink: 0;
       }
 
       .stat-info {
         display: flex;
         flex-direction: column;
+        gap: 0.125rem;
       }
 
       .stat-value {
         font-size: 1.5rem;
         font-weight: 700;
         color: var(--text-primary);
+        line-height: 1.2;
       }
 
       .stat-label {
@@ -372,47 +382,60 @@ import { Company, JobPosting } from '../../../core/models';
     @media (max-width: 768px) {
       .dashboard {
         padding: 1rem;
+        overflow-x: hidden;
       }
 
       .dashboard-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 1rem;
         margin-bottom: 1.5rem;
 
         h1 {
-          font-size: 1.375rem;
+          font-size: 1.5rem;
         }
 
         p {
-          font-size: 0.8125rem;
+          font-size: 0.875rem;
+          margin-top: 0.125rem;
         }
       }
 
       .btn-create {
         width: 100%;
+        display: flex;
         justify-content: center;
-        padding: 0.875rem 1.5rem;
-        min-height: 48px;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
       }
 
       .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 0.75rem;
         margin-bottom: 1.5rem;
       }
 
       .stat-card {
-        padding: 1.25rem;
+        flex-direction: row;
+        align-items: center;
+        padding: 1rem;
         border-radius: var(--radius-lg);
-        gap: 0.875rem;
+        gap: 0.75rem;
 
         &:hover {
           transform: none;
         }
 
         .stat-icon {
-          font-size: 1.5rem;
+          width: 40px;
+          height: 40px;
+          font-size: 1.25rem;
+          border-radius: var(--radius-md);
+        }
+
+        .stat-info {
+          gap: 0;
         }
 
         .stat-value {
@@ -420,7 +443,8 @@ import { Company, JobPosting } from '../../../core/models';
         }
 
         .stat-label {
-          font-size: 0.75rem;
+          font-size: 0.6875rem;
+          color: var(--text-muted);
         }
       }
 
@@ -432,14 +456,14 @@ import { Company, JobPosting } from '../../../core/models';
       }
 
       .jobs-list {
-        gap: 0.625rem;
+        gap: 0.75rem;
       }
 
       .job-item {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.875rem;
-        padding: 1rem;
+        gap: 1rem;
+        padding: 1.25rem;
         border-radius: var(--radius-lg);
 
         &:hover {
@@ -447,70 +471,101 @@ import { Company, JobPosting } from '../../../core/models';
         }
 
         &:active {
-          transform: scale(0.98);
+          transform: scale(0.99);
           background: var(--bg-tertiary);
         }
 
         h3 {
-          font-size: 0.9375rem;
-          margin-bottom: 0.375rem;
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
         }
+      }
+
+      .job-info {
+        width: 100%;
       }
 
       .job-meta {
         flex-wrap: wrap;
         gap: 0.5rem;
 
-        .status,
-        .type,
-        .location {
-          font-size: 0.6875rem;
+        .status {
+          font-size: 0.75rem;
+          padding: 0.25rem 0.625rem;
         }
 
-        .status {
-          padding: 0.1875rem 0.5rem;
+        .type,
+        .location {
+          font-size: 0.8125rem;
         }
       }
 
       .job-stats {
         .applicants {
-          padding: 0.375rem 0.75rem;
-          font-size: 0.75rem;
+          display: inline-flex;
+          padding: 0.5rem 0.875rem;
+          font-size: 0.8125rem;
         }
       }
 
+      .job-actions {
+        width: 100%;
+      }
+
       .btn-view {
-        align-self: flex-start;
-        padding: 0.625rem 1rem;
-        font-size: 0.75rem;
-        min-height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
       }
 
       .loading,
       .empty-state {
-        padding: 2rem 1.5rem;
+        padding: 2.5rem 1.5rem;
         border-radius: var(--radius-lg);
-
-        &::before {
-          width: 32px;
-          height: 32px;
-        }
       }
 
       .empty-state .btn-primary {
         width: 100%;
-        padding: 0.875rem 1.5rem;
-        min-height: 48px;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
       }
     }
 
     @media (max-width: 375px) {
-      .dashboard-header h1 {
-        font-size: 1.25rem;
+      .dashboard {
+        padding: 0.75rem;
       }
 
-      .job-item h3 {
-        font-size: 0.875rem;
+      .dashboard-header h1 {
+        font-size: 1.375rem;
+      }
+
+      .stats-grid {
+        gap: 0.5rem;
+      }
+
+      .stat-card {
+        padding: 0.875rem;
+
+        .stat-icon {
+          font-size: 1.25rem;
+          padding: 0.375rem;
+        }
+
+        .stat-value {
+          font-size: 1.25rem;
+        }
+      }
+
+      .job-item {
+        padding: 1rem;
+        
+        h3 {
+          font-size: 0.9375rem;
+        }
       }
     }
   `]
