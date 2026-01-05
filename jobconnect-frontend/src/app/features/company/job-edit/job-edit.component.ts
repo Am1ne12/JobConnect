@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { JobService } from '../../../core/services/job.service';
@@ -62,7 +62,8 @@ export class JobEditComponent implements OnInit {
         private jobService: JobService,
         private skillService: SkillService,
         private notificationService: NotificationService,
-        private router: Router
+        private router: Router,
+        private location: Location
     ) {
         this.initForm();
     }
@@ -201,5 +202,9 @@ export class JobEditComponent implements OnInit {
             }
         }
         return null;
+    }
+
+    goBack() {
+        this.location.back();
     }
 }

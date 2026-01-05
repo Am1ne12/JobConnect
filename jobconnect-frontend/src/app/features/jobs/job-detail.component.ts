@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { JobService } from '../../core/services/job.service';
@@ -24,11 +24,11 @@ import { JobPosting } from '../../core/models';
         <div class="header-bar">
           <div class="header-inner">
             <div class="header-left">
-              <a routerLink="/jobs" class="back-btn">
+              <button type="button" class="back-btn" (click)="goBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
-              </a>
+              </button>
               <div class="company-logo">{{ job()?.companyName?.charAt(0) }}</div>
               <div class="header-info">
                 <h1>{{ job()?.title }}</h1>
@@ -582,7 +582,8 @@ export class JobDetailComponent implements OnInit {
     private applicationService: ApplicationService,
     public authService: AuthService,
     private notificationService: NotificationService,
-    private router: Router
+    private router: Router,
+    private location: Location
   ) { }
 
   ngOnInit() {
@@ -621,5 +622,9 @@ export class JobDetailComponent implements OnInit {
 
   goToLogin() {
     this.router.navigate(['/login']);
+  }
+
+  goBack() {
+    this.location.back();
   }
 }

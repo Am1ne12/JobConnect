@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { KanbanBoardComponent } from '../kanban-board/kanban-board.component';
 import { CompanyService } from '../../../core/services/company.service';
@@ -23,11 +23,11 @@ import { Application, JobPosting } from '../../../core/models';
         <div class="header-bar">
           <div class="header-inner">
             <div class="header-left">
-              <a routerLink="/company/dashboard" class="back-btn">
+              <button type="button" class="back-btn" (click)="goBack()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
-              </a>
+              </button>
               <div class="header-info">
                 <h1>{{ job()?.title }}</h1>
                 <div class="job-meta">
@@ -324,7 +324,8 @@ export class CandidatesViewComponent implements OnInit {
   constructor(
     private jobService: JobService,
     private notificationService: NotificationService,
-    private router: Router
+    private router: Router,
+    private location: Location
   ) { }
 
   ngOnInit() {
@@ -365,5 +366,9 @@ export class CandidatesViewComponent implements OnInit {
         this.notificationService.error('Failed to delete job. Please try again.');
       }
     });
+  }
+
+  goBack() {
+    this.location.back();
   }
 }
