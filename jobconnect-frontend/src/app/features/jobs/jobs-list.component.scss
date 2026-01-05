@@ -162,10 +162,14 @@
     gap: 0.75rem;
     max-width: 650px;
     margin: 0 auto;
-    position: relative;
     z-index: 100;
     animation: fadeInUp 0.6s ease backwards;
     animation-delay: 0.3s;
+
+    .search-input-wrapper {
+        position: relative;
+        flex: 1;
+    }
 
     .search-icon {
         position: absolute;
@@ -174,6 +178,7 @@
         transform: translateY(-50%);
         color: var(--text-muted);
         pointer-events: none;
+        z-index: 1;
 
         svg {
             width: 20px;
@@ -182,7 +187,7 @@
     }
 
     input {
-        flex: 1;
+        width: 100%;
         background: var(--bg-glass-strong);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
@@ -755,11 +760,12 @@
         flex-direction: column;
         gap: 0.75rem;
 
-        /* Keep search icon positioned relative to input */
+        .search-input-wrapper {
+            width: 100%;
+        }
+
         .search-icon {
-            top: 50%;
             left: 1rem;
-            transform: translateY(-50%);
 
             svg {
                 width: 18px;
@@ -768,7 +774,6 @@
         }
 
         input {
-            width: 100%;
             padding: 0.875rem 1rem 0.875rem 2.75rem;
             font-size: 16px;
             /* Prevents iOS zoom */
