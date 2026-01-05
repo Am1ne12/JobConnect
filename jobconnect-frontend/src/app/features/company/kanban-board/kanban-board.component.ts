@@ -4,6 +4,7 @@ import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from 
 import { CompanyService } from '../../../core/services/company.service';
 import { Application, ApplicationStatus, KanbanUpdate } from '../../../core/models';
 import { CandidateProfileModalComponent } from '../candidate-profile-modal/candidate-profile-modal.component';
+import { CustomDropdownComponent, DropdownOption } from '../../../shared/components/custom-dropdown/custom-dropdown.component';
 
 interface KanbanColumn {
     status: ApplicationStatus;
@@ -15,7 +16,7 @@ interface KanbanColumn {
 @Component({
     selector: 'app-kanban-board',
     standalone: true,
-    imports: [CommonModule, DragDropModule, CandidateProfileModalComponent],
+    imports: [CommonModule, DragDropModule, CandidateProfileModalComponent, CustomDropdownComponent],
     templateUrl: './kanban-board.component.html',
     styleUrl: './kanban-board.component.scss'
 })
@@ -131,6 +132,53 @@ export class KanbanBoardComponent implements OnInit {
 
     closeProfileModal() {
         this.selectedApplication.set(null);
+    }
+
+    getMoveOptions(): DropdownOption[] {
+        return this.columns().map(col => ({
+            value: col.status,
+            label: col.title,
+            icon: this.getStatusIcon(col.status)
+        }));
+    }
+
+    private getStatusIcon(status: ApplicationStatus): string {
+        const icons: Record<ApplicationStatus, string> = {
+            [ApplicationStatus.Submitted]: '📥',
+            [ApplicationStatus.Screening]: '🔍',
+            [ApplicationStatus.Interview]: '💬',
+            [ApplicationStatus.Offer]: '📋',
+            [ApplicationStatus.Hired]: '✅',
+            [ApplicationStatus.Rejected]: '❌'
+        };
+        return icons[status] || '📁';
+    }
+
+    moveToStatus(application: Application, newStatus: string) {
+        const currentColumns = this.columns();
+        const sourceColumn = currentColumns.find(col =>
+            col.applications.some(app => app.id === application.id)
+        );
+        const targetColumn = currentColumns.find(col => col.status === newStatus);
+
+        if (!sourceColumn || !targetColumn || sourceColumn === targetColumn) {
+            return;
+        }
+
+        // Remove from source column
+        const appIndex = sourceColumn.applications.findIndex(app => app.id === application.id);
+        if (appIndex > -1) {
+            sourceColumn.applications.splice(appIndex, 1);
+        }
+
+        // Add to target column at the end
+        targetColumn.applications.push(application);
+
+        // Update the columns signal
+        this.columns.set([...currentColumns]);
+
+        // Save changes to backend
+        this.saveChanges(targetColumn);
     }
 }
 

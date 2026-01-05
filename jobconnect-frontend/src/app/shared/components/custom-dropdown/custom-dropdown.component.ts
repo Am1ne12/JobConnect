@@ -3,16 +3,16 @@ import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export interface DropdownOption {
-    value: string;
-    label: string;
-    icon?: string;
+  value: string;
+  label: string;
+  icon?: string;
 }
 
 @Component({
-    selector: 'app-custom-dropdown',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-custom-dropdown',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="custom-dropdown" [class.open]="isOpen" [class.disabled]="disabled">
       <button type="button" class="dropdown-trigger" (click)="toggle($event)" [disabled]="disabled">
         @if (getSelectedOption()?.icon) {
@@ -44,70 +44,77 @@ export interface DropdownOption {
       </div>
     </div>
   `,
-    styleUrl: './custom-dropdown.component.scss',
-    providers: [
-        {
-            provide: NG_VALUE_ACCESSOR,
-            useExisting: forwardRef(() => CustomDropdownComponent),
-            multi: true
-        }
-    ]
+  styleUrl: './custom-dropdown.component.scss',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => CustomDropdownComponent),
+      multi: true
+    }
+  ]
 })
 export class CustomDropdownComponent implements ControlValueAccessor {
-    @Input() options: DropdownOption[] = [];
-    @Input() placeholder = 'Select an option';
-    @Input() disabled = false;
+  @Input() options: DropdownOption[] = [];
+  @Input() placeholder = 'Select an option';
+  @Input() disabled = false;
+  @Input()
+  set value(val: string) {
+    this._value = val || '';
+  }
+  get value(): string {
+    return this._value;
+  }
 
-    @Output() selectionChange = new EventEmitter<string>();
+  @Output() selectionChange = new EventEmitter<string>();
 
-    isOpen = false;
-    value: string = '';
+  isOpen = false;
+  private _value: string = '';
 
-    private onChange: (value: string) => void = () => { };
-    private onTouched: () => void = () => { };
+  private onChange: (value: string) => void = () => { };
+  private onTouched: () => void = () => { };
 
-    constructor(private elementRef: ElementRef) { }
+  constructor(private elementRef: ElementRef) { }
 
-    @HostListener('document:click', ['$event'])
-    onDocumentClick(event: Event) {
-        if (!this.elementRef.nativeElement.contains(event.target)) {
-            this.isOpen = false;
-        }
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.isOpen = false;
     }
+  }
 
-    toggle(event: Event) {
-        event.stopPropagation();
-        if (!this.disabled) {
-            this.isOpen = !this.isOpen;
-        }
+  toggle(event: Event) {
+    event.stopPropagation();
+    if (!this.disabled) {
+      this.isOpen = !this.isOpen;
     }
+  }
 
-    selectOption(optionValue: string) {
-        this.value = optionValue;
-        this.isOpen = false;
-        this.onChange(optionValue);
-        this.onTouched();
-        this.selectionChange.emit(optionValue);
-    }
+  selectOption(optionValue: string) {
+    this.value = optionValue;
+    this.isOpen = false;
+    this.onChange(optionValue);
+    this.onTouched();
+    this.selectionChange.emit(optionValue);
+  }
 
-    getSelectedOption(): DropdownOption | undefined {
-        return this.options.find(o => o.value === this.value);
-    }
+  getSelectedOption(): DropdownOption | undefined {
+    return this.options.find(o => o.value === this.value);
+  }
 
-    // ControlValueAccessor implementation
-    writeValue(value: string): void {
-        this.value = value || '';
-    }
+  // ControlValueAccessor implementation
+  writeValue(value: string): void {
+    this._value = value || '';
+  }
 
-    registerOnChange(fn: (value: string) => void): void {
-        this.onChange = fn;
-    }
+  registerOnChange(fn: (value: string) => void): void {
+    this.onChange = fn;
+  }
 
-    registerOnTouched(fn: () => void): void {
-        this.onTouched = fn;
-    }
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
 
-    setDisabledState(isDisabled: boolean): void {
-        this.disabled = isDisabled;
-    }
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
+  }
 }

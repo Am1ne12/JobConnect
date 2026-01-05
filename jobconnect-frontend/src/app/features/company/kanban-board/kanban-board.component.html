@@ -63,6 +63,11 @@
                         <button class="btn-view" (click)="viewCandidate(app)">
                             View Profile
                         </button>
+                        <div class="mobile-move">
+                            <app-custom-dropdown [options]="getMoveOptions()" [value]="column.status"
+                                placeholder="Move to..." (selectionChange)="moveToStatus(app, $event)">
+                            </app-custom-dropdown>
+                        </div>
                     </div>
                 </div>
                 }
@@ -70,7 +75,8 @@
                 @if (column.applications.length === 0) {
                 <div class="empty-column">
                     <p>No candidates</p>
-                    <span>Drag candidates here</span>
+                    <span class="desktop-hint">Drag candidates here</span>
+                    <span class="mobile-hint">Use Move dropdown to add</span>
                 </div>
                 }
             </div>
