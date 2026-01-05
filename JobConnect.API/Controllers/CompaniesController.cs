@@ -222,8 +222,25 @@ public class CompaniesController : ControllerBase
         );
     }
 
+    private static readonly System.Text.Json.JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     private CandidateProfileDto MapCandidateToDto(CandidateProfile profile)
     {
+        var experience = string.IsNullOrEmpty(profile.ExperienceJson)
+            ? null
+            : System.Text.Json.JsonSerializer.Deserialize<List<ExperienceDto>>(profile.ExperienceJson, _jsonOptions);
+
+        var education = string.IsNullOrEmpty(profile.EducationJson)
+            ? null
+            : System.Text.Json.JsonSerializer.Deserialize<List<EducationDto>>(profile.EducationJson, _jsonOptions);
+
+        var certifications = string.IsNullOrEmpty(profile.CertificationsJson)
+            ? null
+            : System.Text.Json.JsonSerializer.Deserialize<List<CertificationDto>>(profile.CertificationsJson, _jsonOptions);
+
         return new CandidateProfileDto(
             profile.Id,
             profile.UserId,
@@ -233,9 +250,9 @@ public class CompaniesController : ControllerBase
             profile.Summary,
             profile.Location,
             profile.PhotoUrl,
-            null,
-            null,
-            null,
+            experience,
+            education,
+            certifications,
             profile.Skills.Select(s => new CandidateSkillDto(
                 s.SkillId,
                 s.Skill?.Name ?? "",

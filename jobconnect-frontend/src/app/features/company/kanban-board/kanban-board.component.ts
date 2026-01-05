@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { CompanyService } from '../../../core/services/company.service';
 import { Application, ApplicationStatus, KanbanUpdate } from '../../../core/models';
+import { CandidateProfileModalComponent } from '../candidate-profile-modal/candidate-profile-modal.component';
 
 interface KanbanColumn {
     status: ApplicationStatus;
@@ -14,7 +15,7 @@ interface KanbanColumn {
 @Component({
     selector: 'app-kanban-board',
     standalone: true,
-    imports: [CommonModule, DragDropModule],
+    imports: [CommonModule, DragDropModule, CandidateProfileModalComponent],
     templateUrl: './kanban-board.component.html',
     styleUrl: './kanban-board.component.scss'
 })
@@ -24,6 +25,7 @@ export class KanbanBoardComponent implements OnInit {
     columns = signal<KanbanColumn[]>([]);
     loading = signal(true);
     updating = signal(false);
+    selectedApplication = signal<Application | null>(null);
 
     private readonly columnDefs: Omit<KanbanColumn, 'applications'>[] = [
         { status: ApplicationStatus.Submitted, title: 'Submitted', color: '#667eea' },
@@ -124,7 +126,11 @@ export class KanbanBoardComponent implements OnInit {
     }
 
     viewCandidate(application: Application) {
-        // TODO: Open candidate detail modal
-        console.log('View candidate:', application);
+        this.selectedApplication.set(application);
+    }
+
+    closeProfileModal() {
+        this.selectedApplication.set(null);
     }
 }
+

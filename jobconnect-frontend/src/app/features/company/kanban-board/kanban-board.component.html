@@ -79,3 +79,10 @@
     </div>
     }
 </div>
+
+<!-- Candidate Profile Modal -->
+@if (selectedApplication()) {
+<app-candidate-profile-modal [profile]="selectedApplication()!.candidateProfile!"
+    [matchingScore]="selectedApplication()!.matchingScore" (close)="closeProfileModal()">
+</app-candidate-profile-modal>
+}
