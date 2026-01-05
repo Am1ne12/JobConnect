@@ -5,7 +5,7 @@ export const routes: Routes = [
     // Public routes
     {
         path: '',
-        loadComponent: () => import('./features/jobs/jobs-list.component').then(m => m.JobsListComponent)
+        loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent)
     },
     {
         path: 'jobs',
