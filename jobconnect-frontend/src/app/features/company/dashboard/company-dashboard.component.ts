@@ -78,6 +78,26 @@ import { Company, JobPosting } from '../../../core/models';
     </div>
   `,
   styles: [`
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
     .dashboard {
       min-height: 100vh;
       background: var(--bg-secondary);
@@ -91,6 +111,7 @@ import { Company, JobPosting } from '../../../core/models';
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 2rem;
+      animation: fadeInUp 0.5s ease backwards;
 
       h1 {
         font-size: 1.75rem;
@@ -106,7 +127,7 @@ import { Company, JobPosting } from '../../../core/models';
     }
 
     .btn-create {
-      background: var(--accent);
+      background: linear-gradient(135deg, #6366f1, #a855f7);
       border: none;
       border-radius: var(--radius-full);
       padding: 0.75rem 1.5rem;
@@ -114,11 +135,13 @@ import { Company, JobPosting } from '../../../core/models';
       font-weight: 600;
       cursor: pointer;
       transition: all var(--transition-base);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      animation: fadeInUp 0.5s ease backwards;
+      animation-delay: 0.1s;
 
       &:hover {
-        background: var(--accent-hover);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
       }
     }
 
@@ -138,6 +161,17 @@ import { Company, JobPosting } from '../../../core/models';
       padding: 1.5rem;
       border: 1px solid var(--border-light);
       box-shadow: var(--shadow-sm);
+      animation: fadeInUp 0.5s ease backwards;
+      transition: all var(--transition-base);
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--border-default);
+      }
+
+      &:nth-child(1) { animation-delay: 0.15s; }
+      &:nth-child(2) { animation-delay: 0.25s; }
 
       .stat-icon {
         font-size: 1.75rem;
@@ -161,11 +195,25 @@ import { Company, JobPosting } from '../../../core/models';
     }
 
     .jobs-section {
+      animation: fadeInUp 0.5s ease backwards;
+      animation-delay: 0.3s;
+
       h2 {
         font-size: 1.125rem;
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &::before {
+          content: '';
+          width: 4px;
+          height: 1.25rem;
+          background: linear-gradient(180deg, #6366f1, #a855f7);
+          border-radius: 2px;
+        }
       }
     }
 
@@ -185,10 +233,18 @@ import { Company, JobPosting } from '../../../core/models';
       border: 1px solid var(--border-light);
       box-shadow: var(--shadow-xs);
       transition: all var(--transition-base);
+      animation: fadeInUp 0.4s ease backwards;
+
+      @for $i from 1 through 10 {
+        &:nth-child(#{$i}) {
+          animation-delay: calc(0.35s + #{$i} * 0.05s);
+        }
+      }
 
       &:hover {
         border-color: var(--border-default);
         box-shadow: var(--shadow-md);
+        transform: translateX(4px);
       }
 
       h3 {
@@ -233,7 +289,7 @@ import { Company, JobPosting } from '../../../core/models';
 
     .job-stats {
       .applicants {
-        background: var(--accent-soft-bg);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
         color: var(--accent-soft);
         padding: 0.5rem 1rem;
         border-radius: var(--radius-full);
@@ -256,14 +312,28 @@ import { Company, JobPosting } from '../../../core/models';
       &:hover {
         border-color: var(--accent-soft);
         color: var(--accent-soft);
-        background: var(--accent-soft-bg);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08));
+        transform: translateY(-2px);
       }
     }
 
     .loading {
       text-align: center;
-      padding: 2rem;
+      padding: 3rem;
       color: var(--text-secondary);
+      animation: fadeInUp 0.4s ease;
+
+      &::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 36px;
+        border: 2px solid var(--border-default);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin: 0 auto 1rem;
+      }
     }
 
     .empty-state {
@@ -273,10 +343,12 @@ import { Company, JobPosting } from '../../../core/models';
       border-radius: var(--radius-xl);
       border: 1px solid var(--border-light);
       color: var(--text-secondary);
+      animation: fadeInUp 0.5s ease backwards;
+      animation-delay: 0.3s;
 
       .btn-primary {
         margin-top: 1rem;
-        background: var(--accent);
+        background: linear-gradient(135deg, #6366f1, #a855f7);
         border: none;
         border-radius: var(--radius-full);
         padding: 0.75rem 1.5rem;
@@ -284,9 +356,11 @@ import { Company, JobPosting } from '../../../core/models';
         font-weight: 600;
         cursor: pointer;
         transition: all var(--transition-base);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
 
         &:hover {
-          background: var(--accent-hover);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
         }
       }
     }
