@@ -6,11 +6,12 @@ import { JobService } from '../../../core/services/job.service';
 import { SkillService } from '../../../core/services/skill.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Skill, JobType, CreateJobRequest } from '../../../core/models';
+import { CustomDropdownComponent, DropdownOption } from '../../../shared/components/custom-dropdown/custom-dropdown.component';
 
 @Component({
     selector: 'app-job-create',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomDropdownComponent],
     templateUrl: './job-create.component.html',
     styleUrl: './job-create.component.scss'
 })
@@ -28,6 +29,14 @@ export class JobCreateComponent implements OnInit {
         { value: JobType.Contract, label: 'Contract' },
         { value: JobType.Internship, label: 'Internship' },
         { value: JobType.Remote, label: 'Remote' }
+    ];
+
+    readonly jobTypeOptions: DropdownOption[] = [
+        { value: 'FullTime', label: 'Full Time', icon: '💼' },
+        { value: 'PartTime', label: 'Part Time', icon: '⏰' },
+        { value: 'Contract', label: 'Contract', icon: '📝' },
+        { value: 'Internship', label: 'Internship', icon: '🎓' },
+        { value: 'Remote', label: 'Remote', icon: '🏠' }
     ];
 
     readonly currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'];
@@ -55,7 +64,7 @@ export class JobCreateComponent implements OnInit {
             requirements: [''],
             benefits: [''],
             location: [''],
-            type: [JobType.FullTime, Validators.required],
+            type: ['FullTime', Validators.required],
             salaryMin: [null],
             salaryMax: [null],
             salaryCurrency: ['EUR'],

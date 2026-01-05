@@ -6,11 +6,12 @@ import { JobService } from '../../../core/services/job.service';
 import { SkillService } from '../../../core/services/skill.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Skill, JobType, JobPosting, JobStatus } from '../../../core/models';
+import { CustomDropdownComponent, DropdownOption } from '../../../shared/components/custom-dropdown/custom-dropdown.component';
 
 @Component({
     selector: 'app-job-edit',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomDropdownComponent],
     templateUrl: './job-edit.component.html',
     styleUrl: './job-edit.component.scss'
 })
@@ -32,6 +33,14 @@ export class JobEditComponent implements OnInit {
         { value: JobType.Contract, label: 'Contract' },
         { value: JobType.Internship, label: 'Internship' },
         { value: JobType.Remote, label: 'Remote' }
+    ];
+
+    readonly jobTypeOptions: DropdownOption[] = [
+        { value: 'FullTime', label: 'Full Time', icon: '💼' },
+        { value: 'PartTime', label: 'Part Time', icon: '⏰' },
+        { value: 'Contract', label: 'Contract', icon: '📝' },
+        { value: 'Internship', label: 'Internship', icon: '🎓' },
+        { value: 'Remote', label: 'Remote', icon: '🏠' }
     ];
 
     readonly currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'];
@@ -76,7 +85,7 @@ export class JobEditComponent implements OnInit {
             requirements: [''],
             benefits: [''],
             location: [''],
-            type: [JobType.FullTime, Validators.required],
+            type: ['FullTime', Validators.required],
             salaryMin: [null],
             salaryMax: [null],
             salaryCurrency: ['EUR'],
@@ -107,15 +116,9 @@ export class JobEditComponent implements OnInit {
         }
     }
 
-    private getJobTypeValue(typeString: string): JobType {
-        const typeMap: { [key: string]: JobType } = {
-            'FullTime': JobType.FullTime,
-            'PartTime': JobType.PartTime,
-            'Contract': JobType.Contract,
-            'Internship': JobType.Internship,
-            'Remote': JobType.Remote
-        };
-        return typeMap[typeString] ?? JobType.FullTime;
+    private getJobTypeValue(typeString: string): string {
+        // Dropdown now uses string values directly
+        return typeString || 'FullTime';
     }
 
     setShouldPublish(value: boolean) {
