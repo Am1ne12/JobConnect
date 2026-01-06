@@ -145,6 +145,7 @@ The application supports the following status stages:
 - Matching algorithm calculates scores in under 100ms
 - Architecture supports horizontal scaling through Docker containerization
 - Stateless API design enables load balancing across multiple instances
+- Pagination implemented on all list views (20 items per page) with "Load More" functionality
 
 ### Security Requirements
 
