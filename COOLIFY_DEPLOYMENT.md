@@ -190,6 +190,8 @@ Set the following environment variables in Coolify:
 | `JwtSettings__Audience` | JWT audience | `JobConnectUsers` | Yes |
 | `JwtSettings__ExpiryMinutes` | Token expiration | `60` | Yes |
 | `CorsOrigins` | Allowed CORS origins | `https://yourdomain.com,https://www.yourdomain.com` | Yes |
+| `ADMIN_EMAIL` | Default admin account email | `admin@jobconnect.com` | Yes |
+| `ADMIN_PASSWORD` | Default admin account password | `Admin123!` | Yes |
 
 > **Tip**: Use Coolify's magic variables for passwords: `${SERVICE_PASSWORD_64_BACKEND}` to auto-generate a secure JWT secret.
 
