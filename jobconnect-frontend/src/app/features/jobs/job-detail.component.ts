@@ -639,6 +639,13 @@ export class JobDetailComponent implements OnInit {
   private loadJob() {
     this.jobService.getJob(parseInt(this.id)).subscribe({
       next: (job) => {
+        // Redirect if job is not published (closed or draft)
+        if (job.status !== 'Published') {
+          this.notificationService.error('This job is no longer available');
+          this.router.navigate(['/jobs']);
+          return;
+        }
+
         this.job.set(job);
         this.loading.set(false);
 

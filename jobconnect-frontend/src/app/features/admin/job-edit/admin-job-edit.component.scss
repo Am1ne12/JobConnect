@@ -483,10 +483,10 @@
 /* Status Options */
 .status-options {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
 
-    @media (max-width: 600px) {
+    @media (max-width: 800px) {
         grid-template-columns: 1fr;
     }
 }
@@ -523,6 +523,11 @@
                 background: linear-gradient(135deg, #10b981, #34d399);
                 color: white;
             }
+
+            &.closed {
+                background: linear-gradient(135deg, #ef4444, #f97316);
+                color: white;
+            }
         }
     }
 }
@@ -545,6 +550,11 @@
     &.publish {
         background: rgba(16, 185, 129, 0.12);
         color: #10b981;
+    }
+
+    &.closed {
+        background: rgba(239, 68, 68, 0.12);
+        color: #ef4444;
     }
 }
 

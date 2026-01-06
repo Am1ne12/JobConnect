@@ -155,8 +155,8 @@
                 <p class="card-subtitle">Current: <strong>{{ job()?.status }}</strong></p>
 
                 <div class="status-options">
-                    <button type="button" class="status-option" [class.selected]="!shouldPublish()"
-                        (click)="setShouldPublish(false)">
+                    <button type="button" class="status-option" [class.selected]="selectedStatus() === JobStatus.Draft"
+                        (click)="setStatus(JobStatus.Draft)">
                         <div class="status-icon draft">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"
                                 height="20">
@@ -165,12 +165,13 @@
                             </svg>
                         </div>
                         <div class="status-content">
-                            <span class="status-title">Keep as Draft</span>
-                            <span class="status-desc">Save changes without publishing</span>
+                            <span class="status-title">Draft</span>
+                            <span class="status-desc">Save without publishing</span>
                         </div>
                     </button>
-                    <button type="button" class="status-option" [class.selected]="shouldPublish()"
-                        (click)="setShouldPublish(true)">
+                    <button type="button" class="status-option"
+                        [class.selected]="selectedStatus() === JobStatus.Published"
+                        (click)="setStatus(JobStatus.Published)">
                         <div class="status-icon publish">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"
                                 height="20">
@@ -181,6 +182,20 @@
                         <div class="status-content">
                             <span class="status-title">Publish</span>
                             <span class="status-desc">Make visible to candidates</span>
+                        </div>
+                    </button>
+                    <button type="button" class="status-option" [class.selected]="selectedStatus() === JobStatus.Closed"
+                        (click)="setStatus(JobStatus.Closed)">
+                        <div class="status-icon closed">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"
+                                height="20">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                        </div>
+                        <div class="status-content">
+                            <span class="status-title">Close</span>
+                            <span class="status-desc">Stop accepting applications</span>
                         </div>
                     </button>
                 </div>
@@ -194,7 +209,8 @@
                     <span class="spinner"></span>
                     Saving...
                     } @else {
-                    {{ shouldPublish() ? 'Save & Publish' : 'Save Changes' }}
+                    {{ selectedStatus() === JobStatus.Published ? 'Save & Publish' : (selectedStatus() ===
+                    JobStatus.Closed ? 'Close Job' : 'Save Changes') }}
                     }
                 </button>
             </div>

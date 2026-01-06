@@ -25,7 +25,7 @@ export class JobEditComponent implements OnInit {
     loading = signal(true);
     saving = signal(false);
     error = signal<string | null>(null);
-    shouldPublish = signal(false);
+    selectedStatus = signal<JobStatus>(JobStatus.Draft);
 
     readonly jobTypes = [
         { value: JobType.FullTime, label: 'Full Time' },
@@ -77,7 +77,14 @@ export class JobEditComponent implements OnInit {
             next: (job) => {
                 this.job.set(job);
                 this.populateForm(job);
-                this.shouldPublish.set(job.status === 'Published');
+                // Set the selected status based on current job status
+                if (job.status === 'Draft') {
+                    this.selectedStatus.set(JobStatus.Draft);
+                } else if (job.status === 'Published') {
+                    this.selectedStatus.set(JobStatus.Published);
+                } else if (job.status === 'Closed') {
+                    this.selectedStatus.set(JobStatus.Closed);
+                }
                 this.loading.set(false);
             },
             error: () => {
@@ -130,9 +137,12 @@ export class JobEditComponent implements OnInit {
         return typeString || 'FullTime';
     }
 
-    setShouldPublish(value: boolean) {
-        this.shouldPublish.set(value);
+    setStatus(status: JobStatus) {
+        this.selectedStatus.set(status);
     }
+
+    // Expose JobStatus enum to template
+    readonly JobStatus = JobStatus;
 
     toggleSkill(skillId: number) {
         const current = this.selectedSkills();
@@ -169,7 +179,7 @@ export class JobEditComponent implements OnInit {
             salaryCurrency: formValue.salaryCurrency || undefined,
             experienceYearsMin: formValue.experienceYearsMin || undefined,
             experienceYearsMax: formValue.experienceYearsMax || undefined,
-            status: this.shouldPublish() ? JobStatus.Published : JobStatus.Draft,
+            status: this.selectedStatus(),
             requiredSkills: this.selectedSkills().map(skillId => ({
                 skillId,
                 isRequired: true
@@ -179,9 +189,12 @@ export class JobEditComponent implements OnInit {
         this.jobService.updateJob(this.jobId, jobData).subscribe({
             next: () => {
                 this.saving.set(false);
-                const message = this.shouldPublish()
-                    ? 'Job updated and published successfully!'
-                    : 'Job saved as draft successfully!';
+                let message = 'Job saved as draft successfully!';
+                if (this.selectedStatus() === JobStatus.Published) {
+                    message = 'Job updated and published successfully!';
+                } else if (this.selectedStatus() === JobStatus.Closed) {
+                    message = 'Job has been closed successfully!';
+                }
                 this.notificationService.success(message);
                 this.router.navigate(['/company/jobs', this.jobId, 'candidates']);
             },
