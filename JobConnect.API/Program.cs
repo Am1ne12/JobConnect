@@ -8,6 +8,30 @@ using JobConnect.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Helper to convert PostgreSQL URI to ADO.NET connection string
+static string ConvertConnectionString(string? connectionString)
+{
+    if (string.IsNullOrEmpty(connectionString))
+        return connectionString ?? "";
+    
+    // Check if it's a PostgreSQL URI format (postgres:// or postgresql://)
+    if (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://"))
+    {
+        var uri = new Uri(connectionString);
+        var userInfo = uri.UserInfo.Split(':');
+        var username = userInfo.Length > 0 ? userInfo[0] : "postgres";
+        var password = userInfo.Length > 1 ? userInfo[1] : "";
+        var host = uri.Host;
+        var port = uri.Port > 0 ? uri.Port : 5432;
+        var database = uri.AbsolutePath.TrimStart('/');
+        
+        return $"Host={host};Port={port};Database={database};Username={username};Password={password}";
+    }
+    
+    // Already in ADO.NET format
+    return connectionString;
+}
+
 // Add services to the container
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -17,9 +41,10 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
-// Database
+// Database - supports both PostgreSQL URI and ADO.NET formats
+var connectionString = ConvertConnectionString(builder.Configuration.GetConnectionString("DefaultConnection"));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
