@@ -40,6 +40,12 @@
             <p class="card-description">Enter the information for the new user account</p>
 
             <form [formGroup]="userForm">
+                @if (userForm.get('role')?.value === 'Company') {
+                <div class="form-group">
+                    <label>Company Name *</label>
+                    <input type="text" formControlName="firstName" placeholder="Acme Corp">
+                </div>
+                } @else {
                 <div class="form-group">
                     <label>First Name *</label>
                     <input type="text" formControlName="firstName" placeholder="John">
@@ -49,6 +55,7 @@
                     <label>Last Name</label>
                     <input type="text" formControlName="lastName" placeholder="Doe">
                 </div>
+                }
 
                 <div class="form-group">
                     <label>Email *</label>
@@ -144,6 +151,12 @@
             }
 
             <form [formGroup]="userForm">
+                @if (user()?.role === 'Company') {
+                <div class="form-group">
+                    <label>Company Name *</label>
+                    <input type="text" formControlName="firstName" placeholder="Acme Corp">
+                </div>
+                } @else {
                 <div class="form-group">
                     <label>First Name *</label>
                     <input type="text" formControlName="firstName" placeholder="John">
@@ -153,6 +166,7 @@
                     <label>Last Name</label>
                     <input type="text" formControlName="lastName" placeholder="Doe">
                 </div>
+                }
 
                 <div class="form-group">
                     <label>Email *</label>
