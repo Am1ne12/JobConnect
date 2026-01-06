@@ -24,7 +24,7 @@
                     placeholder="Search by name, email, or location...">
             </div>
 
-            <button class="add-btn" (click)="openAddModal()">
+            <button class="add-btn" (click)="addCandidate()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 5v14M5 12h14" />
                 </svg>
@@ -91,7 +91,7 @@
                 }
 
                 <div class="candidate-actions">
-                    <button class="action-btn edit-btn" (click)="openEditModal(candidate)" title="Edit">
+                    <button class="action-btn edit-btn" (click)="editCandidate(candidate)" title="Edit">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -112,107 +112,4 @@
         </div>
         }
     </div>
-
-    <!-- Modal -->
-    @if (showModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-        <div class="modal" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-                <h2>{{ editingCandidate() ? 'Edit Candidate' : 'Add New Candidate' }}</h2>
-                <button class="close-btn" (click)="closeModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <form [formGroup]="candidateForm" (ngSubmit)="submitForm()">
-                <div class="modal-body">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>First Name *</label>
-                            <input type="text" formControlName="firstName" placeholder="John">
-                            @if (candidateForm.get('firstName')?.invalid && candidateForm.get('firstName')?.touched) {
-                            <span class="error">First name is required</span>
-                            }
-                        </div>
-                        <div class="form-group">
-                            <label>Last Name *</label>
-                            <input type="text" formControlName="lastName" placeholder="Doe">
-                            @if (candidateForm.get('lastName')?.invalid && candidateForm.get('lastName')?.touched) {
-                            <span class="error">Last name is required</span>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Email *</label>
-                            <input type="email" formControlName="email" placeholder="john@example.com">
-                            @if (candidateForm.get('email')?.invalid && candidateForm.get('email')?.touched) {
-                            <span class="error">Valid email is required</span>
-                            }
-                        </div>
-                        @if (!editingCandidate()) {
-                        <div class="form-group">
-                            <label>Password *</label>
-                            <input type="password" formControlName="password" placeholder="••••••••">
-                            @if (candidateForm.get('password')?.invalid && candidateForm.get('password')?.touched) {
-                            <span class="error">Password is required (min 6 chars)</span>
-                            }
-                        </div>
-                        }
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Phone</label>
-                            <input type="tel" formControlName="phone" placeholder="+1 234 567 890">
-                        </div>
-                        <div class="form-group">
-                            <label>Location</label>
-                            <input type="text" formControlName="location" placeholder="New York, USA">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Summary</label>
-                        <textarea formControlName="summary" rows="3"
-                            placeholder="A brief description about the candidate..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Skills</label>
-                        <div class="skills-grid">
-                            @for (skill of skills(); track skill.id) {
-                            <button type="button" class="skill-chip" [class.selected]="isSkillSelected(skill.id)"
-                                (click)="toggleSkill(skill.id)">
-                                {{ skill.name }}
-                                @if (isSkillSelected(skill.id)) {
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
-                                    height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                }
-                            </button>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
-                    <button type="submit" class="btn-primary" [disabled]="saving()">
-                        @if (saving()) {
-                        <div class="btn-spinner"></div>
-                        Saving...
-                        } @else {
-                        {{ editingCandidate() ? 'Update Candidate' : 'Create Candidate' }}
-                        }
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    }
 </div>

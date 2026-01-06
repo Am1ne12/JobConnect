@@ -144,6 +144,24 @@ public class AdminController : ControllerBase
             candidate.User.Email = dto.Email;
         }
 
+        // Update Experience
+        if (dto.Experience != null)
+        {
+            candidate.ExperienceJson = JsonSerializer.Serialize(dto.Experience);
+        }
+
+        // Update Education
+        if (dto.Education != null)
+        {
+            candidate.EducationJson = JsonSerializer.Serialize(dto.Education);
+        }
+
+        // Update Certifications
+        if (dto.Certifications != null)
+        {
+            candidate.CertificationsJson = JsonSerializer.Serialize(dto.Certifications);
+        }
+
         if (dto.SkillIds != null)
         {
             _context.CandidateSkills.RemoveRange(candidate.Skills);
@@ -197,6 +215,10 @@ public class AdminController : ControllerBase
             ? null
             : JsonSerializer.Deserialize<List<EducationDto>>(profile.EducationJson);
 
+        var certifications = string.IsNullOrEmpty(profile.CertificationsJson)
+            ? null
+            : JsonSerializer.Deserialize<List<CertificationDto>>(profile.CertificationsJson);
+
         return new AdminCandidateDto(
             profile.Id,
             profile.UserId,
@@ -209,6 +231,7 @@ public class AdminController : ControllerBase
             profile.PhotoUrl,
             experience,
             education,
+            certifications,
             profile.Skills.Select(s => new CandidateSkillDto(
                 s.SkillId,
                 s.Skill?.Name ?? "",
@@ -235,6 +258,7 @@ public record AdminCandidateDto(
     string? PhotoUrl,
     List<ExperienceDto>? Experience,
     List<EducationDto>? Education,
+    List<CertificationDto>? Certifications,
     List<CandidateSkillDto>? Skills,
     int ApplicationCount,
     DateTime CreatedAt,
@@ -259,5 +283,8 @@ public record UpdateAdminCandidateDto(
     string? Phone,
     string? Summary,
     string? Location,
+    List<ExperienceDto>? Experience,
+    List<EducationDto>? Education,
+    List<CertificationDto>? Certifications,
     int[]? SkillIds
 );

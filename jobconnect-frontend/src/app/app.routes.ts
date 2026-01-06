@@ -109,6 +109,14 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/admin/candidates/admin-candidates.component').then(m => m.AdminCandidatesComponent)
             },
             {
+                path: 'candidates/new',
+                loadComponent: () => import('./features/admin/candidate-edit/admin-candidate-edit.component').then(m => m.AdminCandidateEditComponent)
+            },
+            {
+                path: 'candidates/:id/edit',
+                loadComponent: () => import('./features/admin/candidate-edit/admin-candidate-edit.component').then(m => m.AdminCandidateEditComponent)
+            },
+            {
                 path: '',
                 redirectTo: 'jobs',
                 pathMatch: 'full'

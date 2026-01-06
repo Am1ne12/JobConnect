@@ -1,13 +1,12 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ConfigService } from '../../../core/services/config.service';
-import { SkillService } from '../../../core/services/skill.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { Skill } from '../../../core/models';
 
 interface AdminCandidate {
     id: number;
@@ -28,40 +27,27 @@ interface AdminCandidate {
 @Component({
     selector: 'app-admin-candidates',
     standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule],
+    imports: [CommonModule, FormsModule],
     templateUrl: './admin-candidates.component.html',
     styleUrl: './admin-candidates.component.scss'
 })
 export class AdminCandidatesComponent implements OnInit {
     candidates = signal<AdminCandidate[]>([]);
-    skills = signal<Skill[]>([]);
     loading = signal(true);
-    saving = signal(false);
-    showModal = signal(false);
-    editingCandidate = signal<AdminCandidate | null>(null);
-    selectedSkills = signal<number[]>([]);
     searchQuery = '';
 
     private searchSubject = new Subject<string>();
     private destroy$ = new Subject<void>();
 
-    candidateForm!: FormGroup;
-
     constructor(
         private http: HttpClient,
         private configService: ConfigService,
-        private skillService: SkillService,
         private notificationService: NotificationService,
-        private fb: FormBuilder
-    ) {
-        this.initForm();
-    }
+        private router: Router
+    ) { }
 
     ngOnInit() {
         this.loadCandidates();
-        this.skillService.getSkills().subscribe(skills => {
-            this.skills.set(skills);
-        });
 
         this.searchSubject.pipe(
             debounceTime(300),
@@ -75,18 +61,6 @@ export class AdminCandidatesComponent implements OnInit {
     ngOnDestroy() {
         this.destroy$.next();
         this.destroy$.complete();
-    }
-
-    private initForm() {
-        this.candidateForm = this.fb.group({
-            firstName: ['', Validators.required],
-            lastName: ['', Validators.required],
-            email: ['', [Validators.required, Validators.email]],
-            password: [''],
-            phone: [''],
-            location: [''],
-            summary: ['']
-        });
     }
 
     loadCandidates() {
@@ -113,108 +87,12 @@ export class AdminCandidatesComponent implements OnInit {
         }
     }
 
-    openAddModal() {
-        this.editingCandidate.set(null);
-        this.candidateForm.reset();
-        this.candidateForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
-        this.candidateForm.get('password')?.updateValueAndValidity();
-        this.selectedSkills.set([]);
-        this.showModal.set(true);
+    addCandidate() {
+        this.router.navigate(['/admin/candidates/new']);
     }
 
-    openEditModal(candidate: AdminCandidate) {
-        this.editingCandidate.set(candidate);
-        this.candidateForm.patchValue({
-            firstName: candidate.firstName,
-            lastName: candidate.lastName,
-            email: candidate.email,
-            phone: candidate.phone || '',
-            location: candidate.location || '',
-            summary: candidate.summary || ''
-        });
-        this.candidateForm.get('password')?.clearValidators();
-        this.candidateForm.get('password')?.updateValueAndValidity();
-        this.selectedSkills.set(candidate.skills?.map(s => s.skillId) || []);
-        this.showModal.set(true);
-    }
-
-    closeModal() {
-        this.showModal.set(false);
-        this.editingCandidate.set(null);
-    }
-
-    toggleSkill(skillId: number) {
-        const current = this.selectedSkills();
-        if (current.includes(skillId)) {
-            this.selectedSkills.set(current.filter(id => id !== skillId));
-        } else {
-            this.selectedSkills.set([...current, skillId]);
-        }
-    }
-
-    isSkillSelected(skillId: number): boolean {
-        return this.selectedSkills().includes(skillId);
-    }
-
-    submitForm() {
-        if (this.candidateForm.invalid) {
-            this.candidateForm.markAllAsTouched();
-            return;
-        }
-
-        this.saving.set(true);
-        const formValue = this.candidateForm.value;
-
-        if (this.editingCandidate()) {
-            const updateData = {
-                firstName: formValue.firstName,
-                lastName: formValue.lastName,
-                email: formValue.email,
-                phone: formValue.phone || null,
-                location: formValue.location || null,
-                summary: formValue.summary || null,
-                skillIds: this.selectedSkills()
-            };
-
-            this.http.put<AdminCandidate>(`${this.configService.apiUrl}/admin/candidates/${this.editingCandidate()!.id}`, updateData)
-                .subscribe({
-                    next: () => {
-                        this.saving.set(false);
-                        this.notificationService.success('Candidate updated successfully!');
-                        this.closeModal();
-                        this.loadCandidates();
-                    },
-                    error: (err) => {
-                        this.saving.set(false);
-                        this.notificationService.error(err.error?.message || 'Failed to update candidate');
-                    }
-                });
-        } else {
-            const createData = {
-                firstName: formValue.firstName,
-                lastName: formValue.lastName,
-                email: formValue.email,
-                password: formValue.password,
-                phone: formValue.phone || null,
-                location: formValue.location || null,
-                summary: formValue.summary || null,
-                skillIds: this.selectedSkills()
-            };
-
-            this.http.post<AdminCandidate>(`${this.configService.apiUrl}/admin/candidates`, createData)
-                .subscribe({
-                    next: () => {
-                        this.saving.set(false);
-                        this.notificationService.success('Candidate created successfully!');
-                        this.closeModal();
-                        this.loadCandidates();
-                    },
-                    error: (err) => {
-                        this.saving.set(false);
-                        this.notificationService.error(err.error?.message || 'Failed to create candidate');
-                    }
-                });
-        }
+    editCandidate(candidate: AdminCandidate) {
+        this.router.navigate(['/admin/candidates', candidate.id, 'edit']);
     }
 
     deleteCandidate(candidate: AdminCandidate) {
