@@ -243,6 +243,237 @@ public class AdminController : ControllerBase
             profile.UpdatedAt
         );
     }
+
+    // User Management
+    [HttpGet("users")]
+    public async Task<ActionResult<List<AdminUserDto>>> GetAllUsers([FromQuery] string? search)
+    {
+        var query = _context.Users.AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(u =>
+                u.Email.ToLower().Contains(search.ToLower()));
+        }
+
+        var users = await query.OrderByDescending(u => u.CreatedAt).ToListAsync();
+
+        var result = new List<AdminUserDto>();
+        foreach (var user in users)
+        {
+            string firstName = "", lastName = "";
+            
+            if (user.Role == UserRole.Candidate)
+            {
+                var profile = await _context.CandidateProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+                if (profile != null)
+                {
+                    firstName = profile.FirstName;
+                    lastName = profile.LastName;
+                }
+            }
+            else if (user.Role == UserRole.Company)
+            {
+                var company = await _context.Companies.FirstOrDefaultAsync(c => c.UserId == user.Id);
+                if (company != null)
+                {
+                    firstName = company.Name;
+                    lastName = "";
+                }
+            }
+            else if (user.Role == UserRole.Admin)
+            {
+                firstName = "Admin";
+                lastName = "";
+            }
+
+            result.Add(new AdminUserDto(
+                user.Id,
+                user.Email,
+                firstName,
+                lastName,
+                user.Role.ToString(),
+                user.CreatedAt,
+                user.UpdatedAt
+            ));
+        }
+
+        return Ok(result);
+    }
+
+    [HttpGet("users/{id}")]
+    public async Task<ActionResult<AdminUserDto>> GetUser(int id)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null)
+            return NotFound();
+
+        string firstName = "", lastName = "";
+        
+        if (user.Role == UserRole.Candidate)
+        {
+            var profile = await _context.CandidateProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+            if (profile != null)
+            {
+                firstName = profile.FirstName;
+                lastName = profile.LastName;
+            }
+        }
+        else if (user.Role == UserRole.Company)
+        {
+            var company = await _context.Companies.FirstOrDefaultAsync(c => c.UserId == user.Id);
+            if (company != null)
+            {
+                firstName = company.Name;
+                lastName = "";
+            }
+        }
+        else if (user.Role == UserRole.Admin)
+        {
+            firstName = "Admin";
+            lastName = "";
+        }
+
+        return Ok(new AdminUserDto(
+            user.Id,
+            user.Email,
+            firstName,
+            lastName,
+            user.Role.ToString(),
+            user.CreatedAt,
+            user.UpdatedAt
+        ));
+    }
+
+    [HttpPost("users")]
+    public async Task<ActionResult<AdminUserDto>> CreateUser([FromBody] CreateUserDto dto)
+    {
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+        {
+            return BadRequest(new { message = "Email already registered" });
+        }
+
+        if (!Enum.TryParse<UserRole>(dto.Role, out var role))
+        {
+            return BadRequest(new { message = "Invalid role. Must be Candidate, Company, or Admin" });
+        }
+
+        var user = new User
+        {
+            Email = dto.Email,
+            PasswordHash = _authService.HashPassword(dto.Password),
+            Role = role
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        // Create profile based on role
+        if (role == UserRole.Candidate)
+        {
+            var profile = new CandidateProfile
+            {
+                UserId = user.Id,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName ?? ""
+            };
+            _context.CandidateProfiles.Add(profile);
+            await _context.SaveChangesAsync();
+        }
+        else if (role == UserRole.Company)
+        {
+            var company = new Company
+            {
+                UserId = user.Id,
+                Name = dto.FirstName
+            };
+            _context.Companies.Add(company);
+            await _context.SaveChangesAsync();
+        }
+
+        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, new AdminUserDto(
+            user.Id,
+            user.Email,
+            dto.FirstName,
+            dto.LastName ?? "",
+            role.ToString(),
+            user.CreatedAt,
+            user.UpdatedAt
+        ));
+    }
+
+    [HttpPut("users/{id}")]
+    public async Task<ActionResult<AdminUserDto>> UpdateUser(int id, [FromBody] UpdateUserDto dto)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null)
+            return NotFound();
+
+        if (dto.Email != null && dto.Email != user.Email)
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email && u.Id != id))
+            {
+                return BadRequest(new { message = "Email already in use" });
+            }
+            user.Email = dto.Email;
+        }
+
+        if (!string.IsNullOrEmpty(dto.Password))
+        {
+            user.PasswordHash = _authService.HashPassword(dto.Password);
+        }
+
+        string firstName = dto.FirstName ?? "", lastName = dto.LastName ?? "";
+
+        // Update profile based on role
+        if (user.Role == UserRole.Candidate)
+        {
+            var profile = await _context.CandidateProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+            if (profile != null)
+            {
+                if (dto.FirstName != null) profile.FirstName = dto.FirstName;
+                if (dto.LastName != null) profile.LastName = dto.LastName;
+                firstName = profile.FirstName;
+                lastName = profile.LastName;
+            }
+        }
+        else if (user.Role == UserRole.Company)
+        {
+            var company = await _context.Companies.FirstOrDefaultAsync(c => c.UserId == user.Id);
+            if (company != null)
+            {
+                if (dto.FirstName != null) company.Name = dto.FirstName;
+                firstName = company.Name;
+                lastName = "";
+            }
+        }
+
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new AdminUserDto(
+            user.Id,
+            user.Email,
+            firstName,
+            lastName,
+            user.Role.ToString(),
+            user.CreatedAt,
+            user.UpdatedAt
+        ));
+    }
+
+    [HttpDelete("users/{id}")]
+    public async Task<ActionResult> DeleteUser(int id)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null)
+            return NotFound();
+
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
 
 // Admin-specific DTOs
@@ -287,4 +518,30 @@ public record UpdateAdminCandidateDto(
     List<EducationDto>? Education,
     List<CertificationDto>? Certifications,
     int[]? SkillIds
+);
+
+// User Management DTOs
+public record AdminUserDto(
+    int Id,
+    string Email,
+    string FirstName,
+    string LastName,
+    string Role,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
+);
+
+public record CreateUserDto(
+    string Email,
+    string Password,
+    string FirstName,
+    string? LastName,
+    string Role
+);
+
+public record UpdateUserDto(
+    string? Email,
+    string? Password,
+    string? FirstName,
+    string? LastName
 );

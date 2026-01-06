@@ -8,31 +8,25 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ConfigService } from '../../../core/services/config.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
-interface AdminCandidate {
+interface AdminUser {
     id: number;
-    userId: number;
     email: string;
     firstName: string;
     lastName: string;
-    phone?: string;
-    summary?: string;
-    location?: string;
-    photoUrl?: string;
-    skills?: { skillId: number; skillName: string; proficiencyLevel: number }[];
-    applicationCount: number;
+    role: string;
     createdAt: Date;
     updatedAt: Date;
 }
 
 @Component({
-    selector: 'app-admin-candidates',
+    selector: 'app-admin-users',
     standalone: true,
     imports: [CommonModule, FormsModule],
-    templateUrl: './admin-candidates.component.html',
-    styleUrl: './admin-candidates.component.scss'
+    templateUrl: './admin-users.component.html',
+    styleUrl: './admin-users.component.scss'
 })
-export class AdminCandidatesComponent implements OnInit {
-    candidates = signal<AdminCandidate[]>([]);
+export class AdminUsersComponent implements OnInit {
+    users = signal<AdminUser[]>([]);
     loading = signal(true);
     searchQuery = '';
 
@@ -47,14 +41,14 @@ export class AdminCandidatesComponent implements OnInit {
     ) { }
 
     ngOnInit() {
-        this.loadCandidates();
+        this.loadUsers();
 
         this.searchSubject.pipe(
             debounceTime(300),
             distinctUntilChanged(),
             takeUntil(this.destroy$)
         ).subscribe(() => {
-            this.loadCandidates();
+            this.loadUsers();
         });
     }
 
@@ -63,16 +57,16 @@ export class AdminCandidatesComponent implements OnInit {
         this.destroy$.complete();
     }
 
-    loadCandidates() {
+    loadUsers() {
         this.loading.set(true);
-        let url = `${this.configService.apiUrl}/admin/candidates`;
+        let url = `${this.configService.apiUrl}/admin/users`;
         if (this.searchQuery) {
             url += `?search=${encodeURIComponent(this.searchQuery)}`;
         }
 
-        this.http.get<AdminCandidate[]>(url).subscribe({
-            next: (candidates) => {
-                this.candidates.set(candidates);
+        this.http.get<AdminUser[]>(url).subscribe({
+            next: (users) => {
+                this.users.set(users);
                 this.loading.set(false);
             },
             error: () => {
@@ -87,25 +81,35 @@ export class AdminCandidatesComponent implements OnInit {
         }
     }
 
-    addCandidate() {
-        this.router.navigate(['/admin/candidates/new']);
+    addUser() {
+        this.router.navigate(['/admin/users/new']);
     }
 
-    editCandidate(candidate: AdminCandidate) {
-        this.router.navigate(['/admin/candidates', candidate.id, 'edit']);
+    editUser(user: AdminUser) {
+        this.router.navigate(['/admin/users', user.id, 'edit']);
     }
 
-    deleteCandidate(candidate: AdminCandidate) {
-        if (confirm(`Are you sure you want to delete ${candidate.firstName} ${candidate.lastName}? This action cannot be undone.`)) {
-            this.http.delete(`${this.configService.apiUrl}/admin/candidates/${candidate.id}`).subscribe({
+    deleteUser(user: AdminUser) {
+        const displayName = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName;
+        if (confirm(`Are you sure you want to delete ${displayName}? This action cannot be undone.`)) {
+            this.http.delete(`${this.configService.apiUrl}/admin/users/${user.id}`).subscribe({
                 next: () => {
-                    this.candidates.update(c => c.filter(x => x.id !== candidate.id));
-                    this.notificationService.success('Candidate deleted successfully');
+                    this.users.update(u => u.filter(x => x.id !== user.id));
+                    this.notificationService.success('User deleted successfully');
                 },
                 error: () => {
-                    this.notificationService.error('Failed to delete candidate');
+                    this.notificationService.error('Failed to delete user');
                 }
             });
+        }
+    }
+
+    getRoleBadgeClass(role: string): string {
+        switch (role) {
+            case 'Admin': return 'role-admin';
+            case 'Company': return 'role-company';
+            case 'Candidate': return 'role-candidate';
+            default: return '';
         }
     }
 }

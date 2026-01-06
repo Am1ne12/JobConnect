@@ -105,16 +105,16 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/admin/job-edit/admin-job-edit.component').then(m => m.AdminJobEditComponent)
             },
             {
-                path: 'candidates',
-                loadComponent: () => import('./features/admin/candidates/admin-candidates.component').then(m => m.AdminCandidatesComponent)
+                path: 'users',
+                loadComponent: () => import('./features/admin/users/admin-users.component').then(m => m.AdminUsersComponent)
             },
             {
-                path: 'candidates/new',
-                loadComponent: () => import('./features/admin/candidate-edit/admin-candidate-edit.component').then(m => m.AdminCandidateEditComponent)
+                path: 'users/new',
+                loadComponent: () => import('./features/admin/user-edit/admin-user-edit.component').then(m => m.AdminUserEditComponent)
             },
             {
-                path: 'candidates/:id/edit',
-                loadComponent: () => import('./features/admin/candidate-edit/admin-candidate-edit.component').then(m => m.AdminCandidateEditComponent)
+                path: 'users/:id/edit',
+                loadComponent: () => import('./features/admin/user-edit/admin-user-edit.component').then(m => m.AdminUserEditComponent)
             },
             {
                 path: '',

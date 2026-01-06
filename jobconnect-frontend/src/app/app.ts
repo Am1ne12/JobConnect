@@ -32,7 +32,7 @@ import { NotificationService } from './core/services/notification.service';
               }
               @if (authService.isAdmin()) {
                 <a routerLink="/admin/jobs" routerLinkActive="active" class="nav-link">Manage Jobs</a>
-                <a routerLink="/admin/candidates" routerLinkActive="active" class="nav-link">Candidates</a>
+                <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">Users</a>
               }
             }
           </div>
@@ -126,14 +126,14 @@ import { NotificationService } from './core/services/notification.service';
                   </svg>
                   <span>Manage Jobs</span>
                 </a>
-                <a routerLink="/admin/candidates" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+                <a routerLink="/admin/users" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                   </svg>
-                  <span>Manage Candidates</span>
+                  <span>Manage Users</span>
                 </a>
               }
             }
