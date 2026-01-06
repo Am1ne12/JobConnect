@@ -1,8 +1,12 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { CandidateService } from '../../core/services/candidate.service';
+import { CompanyService } from '../../core/services/company.service';
+import { HttpClient } from '@angular/common/http';
+import { ConfigService } from '../../core/services/config.service';
 
 @Component({
   selector: 'app-settings',
@@ -25,6 +29,8 @@ import { NotificationService } from '../../core/services/notification.service';
             </svg>
             <h2>Change Name</h2>
           </div>
+          
+          <p class="current-value">Current name: <strong>{{ currentName() || 'Not set' }}</strong></p>
           
           <form [formGroup]="nameForm" (ngSubmit)="changeName()">
             <div class="form-row">
@@ -127,10 +133,12 @@ import { NotificationService } from '../../core/services/notification.service';
   `,
   styleUrl: './settings.component.scss'
 })
-export class SettingsComponent {
+export class SettingsComponent implements OnInit {
   nameForm: FormGroup;
   emailForm: FormGroup;
   passwordForm: FormGroup;
+
+  currentName = signal<string>('');
 
   nameLoading = signal(false);
   nameError = signal<string | null>(null);
@@ -144,7 +152,11 @@ export class SettingsComponent {
   constructor(
     private fb: FormBuilder,
     public authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private candidateService: CandidateService,
+    private companyService: CompanyService,
+    private http: HttpClient,
+    private configService: ConfigService
   ) {
     this.nameForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(1)]],
@@ -163,6 +175,59 @@ export class SettingsComponent {
     });
   }
 
+  ngOnInit() {
+    this.loadCurrentName();
+  }
+
+  private loadCurrentName() {
+    if (this.authService.isCandidate()) {
+      this.candidateService.getProfile().subscribe({
+        next: (profile) => {
+          const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+          this.currentName.set(fullName);
+          this.nameForm.patchValue({
+            firstName: profile.firstName,
+            lastName: profile.lastName
+          });
+        },
+        error: () => {
+          // Profile might not exist yet
+        }
+      });
+    } else if (this.authService.isCompany()) {
+      this.companyService.getProfile().subscribe({
+        next: (company) => {
+          this.currentName.set(company.name);
+          this.nameForm.patchValue({
+            firstName: company.name,
+            lastName: ''
+          });
+        },
+        error: () => {
+          // Profile might not exist yet
+        }
+      });
+    } else if (this.authService.isAdmin()) {
+      // For admin, fetch from admin endpoint
+      const userId = this.authService.currentUser()?.userId;
+      if (userId) {
+        this.http.get<{ firstName: string, lastName: string }>(`${this.configService.apiUrl}/admin/users/${userId}`).subscribe({
+          next: (user: any) => {
+            const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+            this.currentName.set(fullName || 'Admin');
+            this.nameForm.patchValue({
+              firstName: user.firstName || '',
+              lastName: user.lastName || ''
+            });
+          },
+          error: () => {
+            this.currentName.set('Admin');
+          }
+        });
+      }
+    }
+  }
+
   passwordMismatch(): boolean {
     const newPass = this.passwordForm.get('newPassword')?.value;
     const confirmPass = this.passwordForm.get('confirmPassword')?.value;
@@ -177,11 +242,17 @@ export class SettingsComponent {
 
     this.authService.changeName({
       firstName: this.nameForm.value.firstName,
-      lastName: this.nameForm.value.lastName
+      lastName: this.nameForm.value.lastName || ''
     }).subscribe({
       next: () => {
         this.nameLoading.set(false);
-        this.nameForm.reset();
+        // Update the displayed current name
+        if (this.authService.isCompany()) {
+          this.currentName.set(this.nameForm.value.firstName);
+        } else {
+          const fullName = `${this.nameForm.value.firstName} ${this.nameForm.value.lastName || ''}`.trim();
+          this.currentName.set(fullName);
+        }
         this.notificationService.success('Name updated successfully');
       },
       error: (err) => {
@@ -235,3 +306,4 @@ export class SettingsComponent {
     });
   }
 }
+
