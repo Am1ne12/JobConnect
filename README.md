@@ -354,20 +354,6 @@ PGADMIN_PASSWORD=admin123
 
 ## 📁 Data Models
 
-### Application Status Flow
-
-```mermaid
-stateDiagram-v2
-    [*] --> Submitted
-    Submitted --> Screening : Review CV
-    Screening --> Interview : Schedule call
-    Interview --> Offer : Send offer
-    Offer --> Hired : Accept
-    Screening --> Rejected : Not fit
-    Interview --> Rejected : Failed
-    Offer --> Rejected : Declined
-```
-
 ### Job Status Lifecycle
 
 | Status | Description |
