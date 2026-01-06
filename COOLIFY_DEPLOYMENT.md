@@ -132,6 +132,12 @@ The JobConnect application consists of three components:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### Coolify Dashboard
+
+![Coolify Dashboard](docs/images/dashboard-coolify.png)
+
+The Coolify dashboard provides a centralized view of all deployed services, their status, and resource usage.
+
 ---
 
 ## Step 1: Deploy PostgreSQL Database

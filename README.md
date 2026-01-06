@@ -404,6 +404,15 @@ dotnet test
 
 ---
 
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [📘 Technical Report](REPORT.md) | Complete technical documentation including architecture, data models, and API reference |
+| [🚀 Coolify Deployment Guide](COOLIFY_DEPLOYMENT.md) | Step-by-step guide for deploying JobConnect on Coolify |
+
+---
+
 <p align="center">
   Made with ❤️
 </p>

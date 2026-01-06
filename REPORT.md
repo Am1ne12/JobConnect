@@ -822,6 +822,12 @@ Companies can manage their job postings, view application statistics, and access
 
 Drag-and-drop candidate management through hiring stages. View candidate profiles, update statuses, and organize your recruitment pipeline.
 
+### Coolify Deployment
+
+![Coolify Dashboard](docs/images/dashboard-coolify.png)
+
+The Coolify dashboard showing all deployed JobConnect services running in production.
+
 ---
 
 ## Installation
