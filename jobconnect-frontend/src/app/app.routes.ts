@@ -5,7 +5,7 @@ export const routes: Routes = [
     // Landing page (only in browser mode, not PWA)
     {
         path: '',
-        canActivate: [pwaGuard, guestGuard],
+        canActivate: [pwaGuard],
         loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent),
         pathMatch: 'full'
     },
