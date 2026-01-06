@@ -106,6 +106,10 @@ import { CustomDropdownComponent, DropdownOption } from '../../shared/components
             }
           </div>
 
+          <div class="pagination-info">
+            Showing {{ jobs().length }} of {{ totalCount() }} jobs
+          </div>
+
           @if (hasMore()) {
             <div class="load-more-container">
               <button class="load-more-btn" (click)="loadMore()" [disabled]="loadingMore()">

@@ -621,6 +621,14 @@
     }
 }
 
+/* Pagination Info */
+.pagination-info {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    padding: 1rem 0 0;
+}
+
 /* Load More Button */
 .load-more-container {
     display: flex;

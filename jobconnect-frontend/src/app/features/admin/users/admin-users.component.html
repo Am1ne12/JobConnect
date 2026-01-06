@@ -87,6 +87,10 @@
             }
         </div>
 
+        <div class="pagination-info">
+            Showing {{ users().length }} of {{ totalCount() }} users
+        </div>
+
         @if (hasMore()) {
         <div class="load-more-container">
             <button class="load-more-btn" (click)="loadMore()" [disabled]="loadingMore()">

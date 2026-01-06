@@ -632,6 +632,16 @@
     }
 }
 
+/* Pagination Info */
+.pagination-info {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    padding: 1rem 0 0;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
 /* Load More Button */
 .load-more-container {
     display: flex;

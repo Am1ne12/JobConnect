@@ -97,6 +97,10 @@
     }
 </div>
 
+<div class="pagination-info">
+    Showing {{ applications().length }} of {{ totalCount() }} applications
+</div>
+
 @if (hasMore()) {
 <div class="load-more-container">
     <button class="load-more-btn" (click)="loadMore()" [disabled]="loadingMore()">
