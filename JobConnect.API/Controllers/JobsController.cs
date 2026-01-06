@@ -24,11 +24,13 @@ public class JobsController : ControllerBase
     // Public endpoint - get all published jobs
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<List<JobPostingDto>>> GetJobs(
+    public async Task<ActionResult<PagedResult<JobPostingDto>>> GetJobs(
         [FromQuery] string? search,
         [FromQuery] string? location,
         [FromQuery] string? type,
-        [FromQuery] int[]? skills)
+        [FromQuery] int[]? skills,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var query = _context.JobPostings
             .Include(j => j.Company)
@@ -61,9 +63,14 @@ public class JobsController : ControllerBase
                 j.RequiredSkills.Any(rs => skills.Contains(rs.SkillId)));
         }
 
-        var jobs = await query.OrderByDescending(j => j.PublishedAt).ToListAsync();
+        var totalCount = await query.CountAsync();
+        var jobs = await query
+            .OrderByDescending(j => j.PublishedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-        return Ok(jobs.Select(j => new JobPostingDto(
+        var items = jobs.Select(j => new JobPostingDto(
             j.Id,
             j.CompanyId,
             j.Company.Name,
@@ -88,7 +95,15 @@ public class JobsController : ControllerBase
             j.CreatedAt,
             j.PublishedAt,
             j.Applications.Count
-        )));
+        )).ToList();
+
+        return Ok(new PagedResult<JobPostingDto>(
+            items,
+            totalCount,
+            page,
+            pageSize,
+            page * pageSize < totalCount
+        ));
     }
 
     [HttpGet("{id}")]
@@ -285,9 +300,11 @@ public class JobsController : ControllerBase
     // Admin endpoints - manage all jobs
     [HttpGet("admin/all")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<List<JobPostingDto>>> GetAllJobsAdmin(
+    public async Task<ActionResult<PagedResult<JobPostingDto>>> GetAllJobsAdmin(
         [FromQuery] string? search,
-        [FromQuery] string? status)
+        [FromQuery] string? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var query = _context.JobPostings
             .Include(j => j.Company)
@@ -309,9 +326,14 @@ public class JobsController : ControllerBase
             query = query.Where(j => j.Status == jobStatus);
         }
 
-        var jobs = await query.OrderByDescending(j => j.CreatedAt).ToListAsync();
+        var totalCount = await query.CountAsync();
+        var jobs = await query
+            .OrderByDescending(j => j.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-        return Ok(jobs.Select(j => new JobPostingDto(
+        var items = jobs.Select(j => new JobPostingDto(
             j.Id,
             j.CompanyId,
             j.Company.Name,
@@ -336,7 +358,15 @@ public class JobsController : ControllerBase
             j.CreatedAt,
             j.PublishedAt,
             j.Applications.Count
-        )));
+        )).ToList();
+
+        return Ok(new PagedResult<JobPostingDto>(
+            items,
+            totalCount,
+            page,
+            pageSize,
+            page * pageSize < totalCount
+        ));
     }
 
     [HttpPut("admin/{id}")]

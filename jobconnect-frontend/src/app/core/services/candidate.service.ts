@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { CandidateProfile, Application } from '../models';
+import { CandidateProfile, Application, PagedResult } from '../models';
 import { ConfigService } from './config.service';
 
 @Injectable({
@@ -24,13 +24,17 @@ export class CandidateService {
         return this.http.put<void>(`${this.API_URL}/skills`, { skills });
     }
 
-    getApplications(): Observable<Application[]> {
-        return this.http.get<Application[]>(`${this.API_URL}/applications`);
+    getApplications(page?: number, pageSize?: number): Observable<PagedResult<Application>> {
+        let params = new HttpParams();
+        if (page) params = params.set('page', page.toString());
+        if (pageSize) params = params.set('pageSize', pageSize.toString());
+        return this.http.get<PagedResult<Application>>(`${this.API_URL}/applications`, { params });
     }
 
     hasApplied(jobId: number): Observable<boolean> {
-        return this.getApplications().pipe(
-            map(applications => applications.some(app => app.jobPostingId === jobId))
+        return this.getApplications(1, 100).pipe(
+            map(result => result.items.some(app => app.jobPostingId === jobId))
         );
     }
 }
+

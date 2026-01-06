@@ -19,6 +19,11 @@ interface StatusStep {
 export class ApplicationTrackerComponent implements OnInit {
     applications = signal<Application[]>([]);
     loading = signal(true);
+    loadingMore = signal(false);
+    hasMore = signal(false);
+    totalCount = signal(0);
+    currentPage = 1;
+    readonly pageSize = 20;
 
     readonly statusSteps: StatusStep[] = [
         { status: ApplicationStatus.Submitted, label: 'Submitted', icon: '📤' },
@@ -35,12 +40,29 @@ export class ApplicationTrackerComponent implements OnInit {
     }
 
     private loadApplications() {
-        this.candidateService.getApplications().subscribe({
-            next: (apps) => {
-                this.applications.set(apps);
+        this.currentPage = 1;
+        this.loading.set(true);
+        this.candidateService.getApplications(this.currentPage, this.pageSize).subscribe({
+            next: (result) => {
+                this.applications.set(result.items);
+                this.totalCount.set(result.totalCount);
+                this.hasMore.set(result.hasMore);
                 this.loading.set(false);
             },
             error: () => this.loading.set(false)
+        });
+    }
+
+    loadMore() {
+        this.currentPage++;
+        this.loadingMore.set(true);
+        this.candidateService.getApplications(this.currentPage, this.pageSize).subscribe({
+            next: (result) => {
+                this.applications.update(current => [...current, ...result.items]);
+                this.hasMore.set(result.hasMore);
+                this.loadingMore.set(false);
+            },
+            error: () => this.loadingMore.set(false)
         });
     }
 

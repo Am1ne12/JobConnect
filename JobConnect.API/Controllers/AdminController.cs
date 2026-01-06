@@ -25,7 +25,10 @@ public class AdminController : ControllerBase
 
     // Candidate Management
     [HttpGet("candidates")]
-    public async Task<ActionResult<List<AdminCandidateDto>>> GetAllCandidates([FromQuery] string? search)
+    public async Task<ActionResult<PagedResult<AdminCandidateDto>>> GetAllCandidates(
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var query = _context.CandidateProfiles
             .Include(p => p.User)
@@ -42,9 +45,20 @@ public class AdminController : ControllerBase
                 p.User.Email.ToLower().Contains(search.ToLower()));
         }
 
-        var candidates = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        var totalCount = await query.CountAsync();
+        var candidates = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-        return Ok(candidates.Select(MapToAdminDto));
+        return Ok(new PagedResult<AdminCandidateDto>(
+            candidates.Select(MapToAdminDto).ToList(),
+            totalCount,
+            page,
+            pageSize,
+            page * pageSize < totalCount
+        ));
     }
 
     [HttpGet("candidates/{id}")]
@@ -246,7 +260,10 @@ public class AdminController : ControllerBase
 
     // User Management
     [HttpGet("users")]
-    public async Task<ActionResult<List<AdminUserDto>>> GetAllUsers([FromQuery] string? search)
+    public async Task<ActionResult<PagedResult<AdminUserDto>>> GetAllUsers(
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var query = _context.Users.AsQueryable();
 
@@ -256,7 +273,12 @@ public class AdminController : ControllerBase
                 u.Email.ToLower().Contains(search.ToLower()));
         }
 
-        var users = await query.OrderByDescending(u => u.CreatedAt).ToListAsync();
+        var totalCount = await query.CountAsync();
+        var users = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
         var result = new List<AdminUserDto>();
         foreach (var user in users)
@@ -298,7 +320,13 @@ public class AdminController : ControllerBase
             ));
         }
 
-        return Ok(result);
+        return Ok(new PagedResult<AdminUserDto>(
+            result,
+            totalCount,
+            page,
+            pageSize,
+            page * pageSize < totalCount
+        ));
     }
 
     [HttpGet("users/{id}")]

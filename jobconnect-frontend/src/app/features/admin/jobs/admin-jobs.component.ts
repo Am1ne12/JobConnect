@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ConfigService } from '../../../core/services/config.service';
-import { JobPosting } from '../../../core/models';
+import { JobPosting, PagedResult } from '../../../core/models';
 import { CustomDropdownComponent, DropdownOption } from '../../../shared/components/custom-dropdown/custom-dropdown.component';
 
 @Component({
@@ -16,9 +16,15 @@ import { CustomDropdownComponent, DropdownOption } from '../../../shared/compone
     templateUrl: './admin-jobs.component.html',
     styleUrl: './admin-jobs.component.scss'
 })
-export class AdminJobsComponent implements OnInit {
+export class AdminJobsComponent implements OnInit, OnDestroy {
     jobs = signal<JobPosting[]>([]);
     loading = signal(true);
+    loadingMore = signal(false);
+    hasMore = signal(false);
+    totalCount = signal(0);
+    currentPage = 1;
+    readonly pageSize = 20;
+
     searchQuery = '';
     statusFilter = '';
 
@@ -55,22 +61,50 @@ export class AdminJobsComponent implements OnInit {
     }
 
     loadJobs() {
+        this.currentPage = 1;
         this.loading.set(true);
-        let url = `${this.configService.apiUrl}/jobs/admin/all`;
         const params = new URLSearchParams();
 
         if (this.searchQuery) params.append('search', this.searchQuery);
         if (this.statusFilter) params.append('status', this.statusFilter);
+        params.append('page', this.currentPage.toString());
+        params.append('pageSize', this.pageSize.toString());
 
-        if (params.toString()) url += `?${params.toString()}`;
+        const url = `${this.configService.apiUrl}/jobs/admin/all?${params.toString()}`;
 
-        this.http.get<JobPosting[]>(url).subscribe({
-            next: (jobs) => {
-                this.jobs.set(jobs);
+        this.http.get<PagedResult<JobPosting>>(url).subscribe({
+            next: (result) => {
+                this.jobs.set(result.items);
+                this.totalCount.set(result.totalCount);
+                this.hasMore.set(result.hasMore);
                 this.loading.set(false);
             },
             error: () => {
                 this.loading.set(false);
+            }
+        });
+    }
+
+    loadMore() {
+        this.currentPage++;
+        this.loadingMore.set(true);
+        const params = new URLSearchParams();
+
+        if (this.searchQuery) params.append('search', this.searchQuery);
+        if (this.statusFilter) params.append('status', this.statusFilter);
+        params.append('page', this.currentPage.toString());
+        params.append('pageSize', this.pageSize.toString());
+
+        const url = `${this.configService.apiUrl}/jobs/admin/all?${params.toString()}`;
+
+        this.http.get<PagedResult<JobPosting>>(url).subscribe({
+            next: (result) => {
+                this.jobs.update(current => [...current, ...result.items]);
+                this.hasMore.set(result.hasMore);
+                this.loadingMore.set(false);
+            },
+            error: () => {
+                this.loadingMore.set(false);
             }
         });
     }
@@ -90,6 +124,7 @@ export class AdminJobsComponent implements OnInit {
             this.http.delete(`${this.configService.apiUrl}/jobs/admin/${job.id}`).subscribe({
                 next: () => {
                     this.jobs.update(jobs => jobs.filter(j => j.id !== job.id));
+                    this.totalCount.update(count => count - 1);
                 }
             });
         }

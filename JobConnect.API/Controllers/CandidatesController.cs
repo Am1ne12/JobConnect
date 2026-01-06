@@ -118,7 +118,9 @@ public class CandidatesController : ControllerBase
     }
 
     [HttpGet("applications")]
-    public async Task<ActionResult<List<ApplicationDto>>> GetApplications()
+    public async Task<ActionResult<PagedResult<ApplicationDto>>> GetApplications(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var userId = GetUserId();
         var profile = await _context.CandidateProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
@@ -126,14 +128,19 @@ public class CandidatesController : ControllerBase
         if (profile == null)
             return NotFound();
 
-        var applications = await _context.Applications
+        var query = _context.Applications
             .Include(a => a.JobPosting)
             .ThenInclude(j => j.Company)
-            .Where(a => a.CandidateProfileId == profile.Id)
+            .Where(a => a.CandidateProfileId == profile.Id);
+
+        var totalCount = await query.CountAsync();
+        var applications = await query
             .OrderByDescending(a => a.AppliedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return Ok(applications.Select(a => new ApplicationDto(
+        var items = applications.Select(a => new ApplicationDto(
             a.Id,
             a.CandidateProfileId,
             $"{profile.FirstName} {profile.LastName}",
@@ -147,7 +154,15 @@ public class CandidatesController : ControllerBase
             a.AppliedAt,
             a.UpdatedAt,
             null
-        )));
+        )).ToList();
+
+        return Ok(new PagedResult<ApplicationDto>(
+            items,
+            totalCount,
+            page,
+            pageSize,
+            page * pageSize < totalCount
+        ));
     }
 
     private CandidateProfileDto MapToDto(CandidateProfile profile)

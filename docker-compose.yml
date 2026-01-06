@@ -52,6 +52,8 @@ services:
       - JwtSettings__Audience=JobConnectUsers
       - JwtSettings__ExpiryMinutes=60
       - CorsOrigins=${CORS_ORIGINS:-http://localhost:4200,http://localhost:4201}
+      - SEED_DATABASE=${SEED_DATABASE:-false}
+      - FORCE_SEED=${FORCE_SEED:-false}
     ports:
       - "5001:5000"
     depends_on:

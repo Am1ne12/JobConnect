@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ConfigService } from '../../../core/services/config.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { PagedResult } from '../../../core/models';
 
 interface AdminUser {
     id: number;
@@ -25,9 +26,15 @@ interface AdminUser {
     templateUrl: './admin-users.component.html',
     styleUrl: './admin-users.component.scss'
 })
-export class AdminUsersComponent implements OnInit {
+export class AdminUsersComponent implements OnInit, OnDestroy {
     users = signal<AdminUser[]>([]);
     loading = signal(true);
+    loadingMore = signal(false);
+    hasMore = signal(false);
+    totalCount = signal(0);
+    currentPage = 1;
+    readonly pageSize = 20;
+
     searchQuery = '';
 
     private searchSubject = new Subject<string>();
@@ -58,19 +65,54 @@ export class AdminUsersComponent implements OnInit {
     }
 
     loadUsers() {
+        this.currentPage = 1;
         this.loading.set(true);
         let url = `${this.configService.apiUrl}/admin/users`;
-        if (this.searchQuery) {
-            url += `?search=${encodeURIComponent(this.searchQuery)}`;
-        }
+        const params = new URLSearchParams();
 
-        this.http.get<AdminUser[]>(url).subscribe({
-            next: (users) => {
-                this.users.set(users);
+        if (this.searchQuery) {
+            params.append('search', this.searchQuery);
+        }
+        params.append('page', this.currentPage.toString());
+        params.append('pageSize', this.pageSize.toString());
+
+        url += `?${params.toString()}`;
+
+        this.http.get<PagedResult<AdminUser>>(url).subscribe({
+            next: (result) => {
+                this.users.set(result.items);
+                this.totalCount.set(result.totalCount);
+                this.hasMore.set(result.hasMore);
                 this.loading.set(false);
             },
             error: () => {
                 this.loading.set(false);
+            }
+        });
+    }
+
+    loadMore() {
+        this.currentPage++;
+        this.loadingMore.set(true);
+        let url = `${this.configService.apiUrl}/admin/users`;
+        const params = new URLSearchParams();
+
+        if (this.searchQuery) {
+            params.append('search', this.searchQuery);
+        }
+        params.append('page', this.currentPage.toString());
+        params.append('pageSize', this.pageSize.toString());
+
+        url += `?${params.toString()}`;
+
+        this.http.get<PagedResult<AdminUser>>(url).subscribe({
+            next: (result) => {
+                this.users.update(current => [...current, ...result.items]);
+                this.hasMore.set(result.hasMore);
+                this.loadingMore.set(false);
+            },
+            error: () => {
+                this.loadingMore.set(false);
             }
         });
     }
@@ -95,6 +137,7 @@ export class AdminUsersComponent implements OnInit {
             this.http.delete(`${this.configService.apiUrl}/admin/users/${user.id}`).subscribe({
                 next: () => {
                     this.users.update(u => u.filter(x => x.id !== user.id));
+                    this.totalCount.update(count => count - 1);
                     this.notificationService.success('User deleted successfully');
                 },
                 error: () => {

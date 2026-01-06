@@ -93,6 +93,19 @@
             </div>
             }
         </div>
+
+        @if (hasMore()) {
+        <div class="load-more-container">
+            <button class="load-more-btn" (click)="loadMore()" [disabled]="loadingMore()">
+                @if (loadingMore()) {
+                <span class="btn-spinner"></span>
+                Loading...
+                } @else {
+                Load More Jobs
+                }
+            </button>
+        </div>
+        }
         }
     </div>
 </div>
