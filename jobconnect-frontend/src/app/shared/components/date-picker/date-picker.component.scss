@@ -1,0 +1,228 @@
+.date-picker {
+    position: relative;
+    width: 100%;
+}
+
+// Trigger Button
+.date-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+    text-align: left;
+
+    &:hover:not(:disabled) {
+        background: var(--bg-secondary);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    &:focus {
+        outline: none;
+        background: var(--bg-secondary);
+    }
+}
+
+.calendar-icon {
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.date-value {
+    flex: 1;
+
+    &.placeholder {
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+}
+
+.clear-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border: none;
+    border-radius: 50%;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    padding-bottom: 1px;
+    transition: all var(--transition-fast);
+
+    &:hover {
+        background: var(--error-bg);
+        color: var(--error);
+    }
+}
+
+.chevron {
+    color: var(--text-muted);
+    transition: transform var(--transition-base);
+    display: flex;
+    align-items: center;
+}
+
+.date-picker.open .chevron {
+    transform: rotate(180deg);
+}
+
+// Calendar Dropdown
+.calendar-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: 1rem;
+    box-shadow: var(--shadow-xl);
+    min-width: 280px;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+// Calendar Header
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding: 0 0.25rem;
+}
+
+.month-year {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+}
+
+.nav-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+}
+
+// Weekday Headers
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 0.5rem;
+}
+
+.weekday {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 0.5rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+// Calendar Grid
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.day-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover:not(:disabled):not(.selected) {
+        background: var(--bg-tertiary);
+    }
+
+    &.other-month {
+        color: var(--text-muted);
+        opacity: 0.5;
+    }
+
+    &.today {
+        background: var(--bg-tertiary);
+        font-weight: 700;
+
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-soft);
+            border-radius: 50%;
+        }
+    }
+
+    &.selected {
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+
+    &.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}
+
+// Disabled state
+.date-picker.disabled {
+    .date-trigger {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}

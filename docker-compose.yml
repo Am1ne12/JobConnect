@@ -1,0 +1,87 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: jobconnect-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jobconnect}
+      POSTGRES_USER: ${POSTGRES_USER:-jobconnect}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobconnect123}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jobconnect-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobconnect}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin Database Management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: jobconnect-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5052:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - jobconnect-network
+
+  # .NET API Backend
+  api:
+    build:
+      context: ./JobConnect.API
+      dockerfile: Dockerfile
+    container_name: jobconnect-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=${POSTGRES_DB:-jobconnect};Username=${POSTGRES_USER:-jobconnect};Password=${POSTGRES_PASSWORD:-jobconnect123}
+      - JwtSettings__Secret=${JWT_SECRET:-YourSuperSecretKeyThatIsAtLeast32CharactersLong!}
+      - JwtSettings__Issuer=JobConnect
+      - JwtSettings__Audience=JobConnectUsers
+      - JwtSettings__ExpiryMinutes=60
+      - CorsOrigins=${CORS_ORIGINS:-http://localhost:4200,http://localhost:4201}
+    ports:
+      - "5001:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - jobconnect-network
+
+  # Angular Frontend
+  frontend:
+    build:
+      context: ./jobconnect-frontend
+      dockerfile: Dockerfile
+    container_name: jobconnect-frontend
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "4201:4200"
+    volumes:
+      - ./jobconnect-frontend/src:/app/src
+      - ./jobconnect-frontend/angular.json:/app/angular.json
+    depends_on:
+      - api
+    networks:
+      - jobconnect-network
+
+networks:
+  jobconnect-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:

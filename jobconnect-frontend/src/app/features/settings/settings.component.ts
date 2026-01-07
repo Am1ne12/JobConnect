@@ -1,0 +1,172 @@
+import { Component, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
+
+@Component({
+    selector: 'app-settings',
+    standalone: true,
+    imports: [CommonModule, ReactiveFormsModule],
+    template: `
+    <div class="settings-container">
+      <div class="settings-content">
+        <div class="settings-header">
+          <h1>Account Settings</h1>
+          <p>Manage your email and password</p>
+        </div>
+
+        <!-- Change Email Section -->
+        <div class="settings-card">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <h2>Change Email</h2>
+          </div>
+          
+          <p class="current-value">Current email: <strong>{{ authService.currentUser()?.email }}</strong></p>
+          
+          <form [formGroup]="emailForm" (ngSubmit)="changeEmail()">
+            <div class="form-group">
+              <label>New Email</label>
+              <input type="email" formControlName="newEmail" placeholder="newaddress@email.com">
+            </div>
+
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" formControlName="currentPassword" placeholder="Enter your password to confirm">
+            </div>
+
+            @if (emailError()) {
+              <div class="error-message">{{ emailError() }}</div>
+            }
+
+            <button type="submit" class="btn-primary" [disabled]="emailLoading() || emailForm.invalid">
+              {{ emailLoading() ? 'Updating...' : 'Update Email' }}
+            </button>
+          </form>
+        </div>
+
+        <!-- Change Password Section -->
+        <div class="settings-card">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <h2>Change Password</h2>
+          </div>
+          
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" formControlName="currentPassword" placeholder="Enter current password">
+            </div>
+
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" formControlName="newPassword" placeholder="Enter new password (min 6 characters)">
+            </div>
+
+            <div class="form-group">
+              <label>Confirm New Password</label>
+              <input type="password" formControlName="confirmPassword" placeholder="Confirm new password">
+            </div>
+
+            @if (passwordError()) {
+              <div class="error-message">{{ passwordError() }}</div>
+            }
+
+            @if (passwordMismatch()) {
+              <div class="error-message">Passwords do not match</div>
+            }
+
+            <button type="submit" class="btn-primary" [disabled]="passwordLoading() || passwordForm.invalid || passwordMismatch()">
+              {{ passwordLoading() ? 'Updating...' : 'Update Password' }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  `,
+    styleUrl: './settings.component.scss'
+})
+export class SettingsComponent {
+    emailForm: FormGroup;
+    passwordForm: FormGroup;
+
+    emailLoading = signal(false);
+    emailError = signal<string | null>(null);
+
+    passwordLoading = signal(false);
+    passwordError = signal<string | null>(null);
+
+    constructor(
+        private fb: FormBuilder,
+        public authService: AuthService,
+        private notificationService: NotificationService
+    ) {
+        this.emailForm = this.fb.group({
+            newEmail: ['', [Validators.required, Validators.email]],
+            currentPassword: ['', Validators.required]
+        });
+
+        this.passwordForm = this.fb.group({
+            currentPassword: ['', Validators.required],
+            newPassword: ['', [Validators.required, Validators.minLength(6)]],
+            confirmPassword: ['', Validators.required]
+        });
+    }
+
+    passwordMismatch(): boolean {
+        const newPass = this.passwordForm.get('newPassword')?.value;
+        const confirmPass = this.passwordForm.get('confirmPassword')?.value;
+        return confirmPass && newPass !== confirmPass;
+    }
+
+    changeEmail() {
+        if (this.emailForm.invalid) return;
+
+        this.emailLoading.set(true);
+        this.emailError.set(null);
+
+        this.authService.changeEmail({
+            newEmail: this.emailForm.value.newEmail,
+            currentPassword: this.emailForm.value.currentPassword
+        }).subscribe({
+            next: () => {
+                this.emailLoading.set(false);
+                this.emailForm.reset();
+                this.notificationService.success('Email updated successfully');
+            },
+            error: (err) => {
+                this.emailLoading.set(false);
+                this.emailError.set(err.error?.message || 'Failed to update email');
+            }
+        });
+    }
+
+    changePassword() {
+        if (this.passwordForm.invalid || this.passwordMismatch()) return;
+
+        this.passwordLoading.set(true);
+        this.passwordError.set(null);
+
+        this.authService.changePassword({
+            currentPassword: this.passwordForm.value.currentPassword,
+            newPassword: this.passwordForm.value.newPassword
+        }).subscribe({
+            next: () => {
+                this.passwordLoading.set(false);
+                this.passwordForm.reset();
+                this.notificationService.success('Password updated successfully');
+            },
+            error: (err) => {
+                this.passwordLoading.set(false);
+                this.passwordError.set(err.error?.message || 'Failed to update password');
+            }
+        });
+    }
+}
