@@ -152,7 +152,7 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(ca => ca.CompanyId)
                 .OnDelete(DeleteBehavior.Cascade);
             
-            entity.HasIndex(e => new { e.CompanyId, e.DayOfWeek }).IsUnique();
+            // Note: No unique constraint - allows multiple slots per day
         });
 
         // InterviewMessage configuration

@@ -36,17 +36,22 @@ public class InterviewSchedulingService : IInterviewSchedulingService
         if (dayOfWeek == DayOfWeek.Saturday || dayOfWeek == DayOfWeek.Sunday)
             return new List<(DateTime, DateTime)>();
 
-        // Get company availability for this day
-        var availability = await _context.CompanyAvailabilities
-            .FirstOrDefaultAsync(a => a.CompanyId == companyId && a.DayOfWeek == dayOfWeek && a.IsActive);
+        // Get ALL company availabilities for this day (each slot is stored separately)
+        var availabilities = await _context.CompanyAvailabilities
+            .Where(a => a.CompanyId == companyId && a.DayOfWeek == dayOfWeek && a.IsActive)
+            .ToListAsync();
 
-        if (availability == null)
+        if (availabilities.Count == 0)
             return new List<(DateTime, DateTime)>();
 
         // Get existing interviews for this company on this date
+        // Use range comparison with UTC kind for EF Core/Npgsql compatibility
+        var dateStart = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+        var dateEnd = DateTime.SpecifyKind(date.Date.AddDays(1), DateTimeKind.Utc);
         var existingInterviews = await _context.Interviews
             .Where(i => i.CompanyId == companyId 
-                && i.ScheduledAt.Date == date.Date
+                && i.ScheduledAt >= dateStart
+                && i.ScheduledAt < dateEnd
                 && i.Status != InterviewStatus.Cancelled
                 && i.Status != InterviewStatus.Rescheduled)
             .Select(i => new { i.ScheduledAt, i.EndsAt })
@@ -54,30 +59,26 @@ public class InterviewSchedulingService : IInterviewSchedulingService
 
         var slots = new List<(DateTime Start, DateTime End)>();
         
-        // Generate all possible slots
-        var currentSlotStart = date.Date.Add(availability.StartTime.ToTimeSpan());
-        var dayEnd = date.Date.Add(availability.EndTime.ToTimeSpan());
-
-        while (currentSlotStart.Add(InterviewDuration) <= dayEnd)
+        // Each availability entry represents an exact configured slot
+        foreach (var availability in availabilities)
         {
-            var slotEnd = currentSlotStart.Add(InterviewDuration);
+            var slotStart = date.Date.Add(availability.StartTime.ToTimeSpan());
+            var slotEnd = date.Date.Add(availability.EndTime.ToTimeSpan());
             
             // Check if this slot conflicts with any existing interview
             var hasConflict = existingInterviews.Any(existing =>
-                (currentSlotStart >= existing.ScheduledAt && currentSlotStart < existing.EndsAt) ||
+                (slotStart >= existing.ScheduledAt && slotStart < existing.EndsAt) ||
                 (slotEnd > existing.ScheduledAt && slotEnd <= existing.EndsAt) ||
-                (currentSlotStart <= existing.ScheduledAt && slotEnd >= existing.EndsAt));
+                (slotStart <= existing.ScheduledAt && slotEnd >= existing.EndsAt));
 
             if (!hasConflict)
             {
-                slots.Add((currentSlotStart, slotEnd));
+                slots.Add((slotStart, slotEnd));
             }
-
-            // Move to next slot (1h30 intervals)
-            currentSlotStart = currentSlotStart.Add(InterviewDuration);
         }
 
-        return slots;
+        // Sort slots by start time
+        return slots.OrderBy(s => s.Start).ToList();
     }
 
     /// <summary>

@@ -542,25 +542,17 @@ export class AvailabilityConfigComponent implements OnInit {
         this.saving.set(true);
         this.saved.set(false);
 
-        // Convert selected slots to availability ranges
+        // Convert selected slots to individual availability entries
         const slots: any[] = [];
 
         for (const day of this.daysConfig()) {
             const selectedSlots = day.slots.filter(s => s.selected);
-            if (selectedSlots.length > 0) {
-                // Find min and max times
-                const startMinutes = selectedSlots.reduce((min, s) => {
-                    const mins = s.hour * 60 + s.minute;
-                    return mins < min ? mins : min;
-                }, 24 * 60);
-
-                const endMinutes = selectedSlots.reduce((max, s) => {
-                    const mins = s.hour * 60 + s.minute + 90; // +1h30 for slot duration
-                    return mins > max ? mins : max;
-                }, 0);
-
-                const startHour = Math.floor(startMinutes / 60);
-                const startMin = startMinutes % 60;
+            // Create a separate availability entry for each selected slot
+            for (const slot of selectedSlots) {
+                const startHour = slot.hour;
+                const startMin = slot.minute;
+                // End time is start + 1h30 (90 minutes)
+                const endMinutes = startHour * 60 + startMin + 90;
                 const endHour = Math.floor(endMinutes / 60);
                 const endMin = endMinutes % 60;
 

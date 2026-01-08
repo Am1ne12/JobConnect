@@ -74,7 +74,11 @@ export class InterviewService {
     getAvailableSlots(companyId: number, startDate?: Date, days: number = 14): Observable<AvailableSlot[]> {
         let params = new HttpParams().set('days', days.toString());
         if (startDate) {
-            params = params.set('startDate', startDate.toISOString());
+            // Format date as yyyy-MM-dd to avoid UTC conversion from toISOString()
+            const year = startDate.getFullYear();
+            const month = String(startDate.getMonth() + 1).padStart(2, '0');
+            const day = String(startDate.getDate()).padStart(2, '0');
+            params = params.set('startDate', `${year}-${month}-${day}`);
         }
         return this.http.get<AvailableSlot[]>(`${this.AVAILABILITY_URL}/${companyId}/slots`, { params });
     }

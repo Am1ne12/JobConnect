@@ -780,12 +780,11 @@ export class BookInterviewComponent implements OnInit {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
-            year: 'numeric',
-            timeZone: 'UTC'
+            year: 'numeric'
         });
     }
 
     formatTime(date: Date | string): string {
-        return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+        return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     }
 }

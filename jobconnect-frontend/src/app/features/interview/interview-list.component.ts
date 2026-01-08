@@ -792,8 +792,7 @@ export class InterviewListComponent implements OnInit {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
-            year: 'numeric',
-            timeZone: 'UTC'
+            year: 'numeric'
         });
     }
 
@@ -801,8 +800,7 @@ export class InterviewListComponent implements OnInit {
         const d = new Date(date);
         return d.toLocaleTimeString('fr-FR', {
             hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'UTC'
+            minute: '2-digit'
         });
     }
 }
