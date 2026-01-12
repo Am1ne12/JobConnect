@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../../../core/services/schedule.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 
 @Component({
     selector: 'app-company-calendar',
@@ -57,10 +58,27 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
                                         [class.blocked]="slot?.status === 'blocked'"
                                         [class.past]="slot?.status === 'past'"
                                         [class.available]="slot?.status === 'available'"
+                                        [class.interview-completed]="slot?.interviewStatus === 'Completed'"
+                                        [class.interview-cancelled]="slot?.interviewStatus === 'Cancelled'"
+                                        [class.interview-inprogress]="slot?.interviewStatus === 'InProgress' || slot?.interviewStatus === 'InWaitingRoom'"
+                                        [class.interview-scheduled]="slot?.interviewStatus === 'Scheduled'"
                                         (click)="onSlotClick(day.date, time, slot)">
                                         
                                         @if (slot?.status === 'booked' && slot) {
-                                            <div class="slot-content booked">
+                                            <div class="slot-content booked" 
+                                                 [class.completed]="slot.interviewStatus === 'Completed'"
+                                                 [class.cancelled]="slot.interviewStatus === 'Cancelled'"
+                                                 [class.inprogress]="slot.interviewStatus === 'InProgress' || slot.interviewStatus === 'InWaitingRoom'"
+                                                 [class.scheduled]="slot.interviewStatus === 'Scheduled'">
+                                                <span class="slot-status-icon">
+                                                    @switch (slot.interviewStatus) {
+                                                        @case ('Completed') { ✓ }
+                                                        @case ('Cancelled') { ✕ }
+                                                        @case ('InProgress') { ● }
+                                                        @case ('InWaitingRoom') { ● }
+                                                        @default { ○ }
+                                                    }
+                                                </span>
                                                 <span class="slot-candidate">{{ slot.candidateName }}</span>
                                                 <span class="slot-job">{{ slot.jobTitle }}</span>
                                             </div>
@@ -86,8 +104,20 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
                 <!-- Legend -->
                 <div class="legend">
                     <div class="legend-item">
-                        <span class="legend-color booked"></span>
-                        <span>Entretien réservé</span>
+                        <span class="legend-color scheduled"></span>
+                        <span>À venir</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color inprogress"></span>
+                        <span>En cours</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color completed"></span>
+                        <span>Terminé</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color cancelled"></span>
+                        <span>Annulé</span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-color blocked"></span>
@@ -96,10 +126,6 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
                     <div class="legend-item">
                         <span class="legend-color available"></span>
                         <span>Disponible</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color past"></span>
-                        <span>Passé</span>
                     </div>
                 </div>
 
@@ -151,16 +177,51 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
             @if (showInterviewModal()) {
                 <div class="modal-overlay" (click)="closeInterviewModal()">
                     <div class="modal-content interview-modal" (click)="$event.stopPropagation()">
-                        <h3>📅 Entretien programmé</h3>
+                        <!-- Dynamic header based on status -->
+                        @switch (selectedInterview()?.interviewStatus) {
+                            @case ('InProgress') {
+                                <h3 class="status-inprogress">� Entretien en cours</h3>
+                            }
+                            @case ('InWaitingRoom') {
+                                <h3 class="status-inprogress">🟡 Entretien en cours</h3>
+                            }
+                            @case ('Completed') {
+                                <h3 class="status-completed">✅ Entretien terminé</h3>
+                            }
+                            @case ('Cancelled') {
+                                <h3 class="status-cancelled">❌ Entretien annulé</h3>
+                            }
+                            @default {
+                                <h3>�📅 Entretien programmé</h3>
+                            }
+                        }
+                        
                         <div class="interview-details">
                             <p><strong>Candidat:</strong> {{ selectedInterview()?.candidateName }}</p>
                             <p><strong>Poste:</strong> {{ selectedInterview()?.jobTitle }}</p>
                             <p><strong>Date:</strong> {{ formatInterviewDate() }}</p>
                             <p><strong>Heure:</strong> {{ selectedInterview()?.startTime }} - {{ selectedInterview()?.endTime }}</p>
+                            
+                            <!-- Show cancellation reason for cancelled interviews -->
+                            @if (selectedInterview()?.interviewStatus === 'Cancelled' && selectedInterview()?.cancellationReason) {
+                                <p class="cancellation-reason"><strong>Motif d'annulation:</strong> {{ selectedInterview()?.cancellationReason }}</p>
+                            }
                         </div>
+                        
                         <div class="modal-actions-vertical">
+                            <!-- Join button for in-progress interviews -->
+                            @if (selectedInterview()?.interviewStatus === 'InProgress' || selectedInterview()?.interviewStatus === 'InWaitingRoom') {
+                                <a [routerLink]="['/interview', selectedInterview()?.id, 'room']" class="btn-primary btn-join-call">
+                                    🎥 Rejoindre l'appel
+                                </a>
+                            }
+                            
                             <button (click)="closeInterviewModal()" class="btn-secondary">Fermer</button>
-                            <button (click)="openCancelModal()" class="btn-danger">❌ Annuler l'entretien</button>
+                            
+                            <!-- Cancel button only for scheduled interviews -->
+                            @if (selectedInterview()?.interviewStatus === 'Scheduled') {
+                                <button (click)="openCancelModal()" class="btn-danger">❌ Annuler l'entretien</button>
+                            }
                         </div>
                     </div>
                 </div>
@@ -308,13 +369,26 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
             padding: 0.5rem;
             border-left: 1px solid var(--border-light);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
         }
 
         .slot-cell.available:hover { background: rgba(124, 58, 237, 0.1); }
-        .slot-cell.booked { background: rgba(16, 185, 129, 0.15); }
         .slot-cell.blocked { background: rgba(107, 114, 128, 0.15); }
         .slot-cell.past { background: var(--bg-tertiary); cursor: default; }
+
+        /* Interview Status Colors on slot cells */
+        .slot-cell.interview-scheduled { background: rgba(99, 102, 241, 0.15); }
+        .slot-cell.interview-inprogress { background: rgba(245, 158, 11, 0.20); }
+        .slot-cell.interview-completed { background: rgba(16, 185, 129, 0.15); }
+        .slot-cell.interview-cancelled { background: rgba(239, 68, 68, 0.15); }
+
+        /* Hover effect for booked slots */
+        .slot-cell.booked:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+            position: relative;
+        }
 
         .slot-content {
             height: 100%;
@@ -324,12 +398,23 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
             align-items: center;
             font-size: 0.8rem;
             text-align: center;
+            gap: 2px;
         }
 
-        .slot-content.booked { color: #059669; }
         .slot-content.blocked { color: #6b7280; }
         .slot-content.available { color: var(--accent); opacity: 0; }
         .slot-cell.available:hover .slot-content.available { opacity: 1; }
+
+        /* Interview Status Colors on slot content */
+        .slot-content.scheduled { color: #6366f1; }
+        .slot-content.inprogress { color: #d97706; }
+        .slot-content.completed { color: #059669; }
+        .slot-content.cancelled { color: #dc2626; text-decoration: line-through; }
+
+        .slot-status-icon {
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
 
         .slot-candidate { font-weight: 600; }
         .slot-job { font-size: 0.75rem; opacity: 0.8; }
@@ -338,7 +423,7 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
         .legend {
             display: flex;
             justify-content: center;
-            gap: 2rem;
+            gap: 1.5rem;
             margin-top: 1.5rem;
             flex-wrap: wrap;
         }
@@ -356,10 +441,13 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
             height: 16px;
             border-radius: 4px;
         }
-        .legend-color.booked { background: rgba(16, 185, 129, 0.5); }
+        .legend-color.scheduled { background: rgba(99, 102, 241, 0.5); }
+        .legend-color.inprogress { background: rgba(245, 158, 11, 0.5); }
+        .legend-color.completed { background: rgba(16, 185, 129, 0.5); }
+        .legend-color.cancelled { background: rgba(239, 68, 68, 0.5); }
         .legend-color.blocked { background: rgba(107, 114, 128, 0.5); }
         .legend-color.available { background: rgba(124, 58, 237, 0.3); border: 1px dashed var(--accent); }
-        .legend-color.past { background: var(--bg-tertiary); }
+
 
         .unavailabilities-section {
             margin-top: 2rem;
@@ -462,6 +550,41 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
         .btn-danger:disabled { opacity: 0.7; }
         .warning-text { color: #dc2626; font-size: 0.875rem; margin: 0.5rem 0 1rem; }
 
+        /* Status header styles */
+        .status-inprogress { color: #d97706; }
+        .status-completed { color: #059669; }
+        .status-cancelled { color: #dc2626; }
+
+        /* Join call button */
+        .btn-join-call {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-join-call:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Cancellation reason */
+        .cancellation-reason {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #dc2626;
+            border-radius: 4px;
+            color: #dc2626;
+        }
+
         @media (max-width: 768px) {
             .calendar-header { padding: 1rem; }
             h1 { font-size: 1.25rem; }
@@ -494,8 +617,10 @@ import { ScheduleService, WeekCalendar, CalendarSlot, Unavailability } from '../
         }
     `]
 })
-export class CompanyCalendarComponent implements OnInit {
+export class CompanyCalendarComponent implements OnInit, OnDestroy {
     private scheduleService = inject(ScheduleService);
+    private signalRService = inject(SignalRService);
+    private unsubscribeSignalR?: () => void;
 
     loading = signal(true);
     calendar = signal<WeekCalendar | null>(null);
@@ -515,7 +640,16 @@ export class CompanyCalendarComponent implements OnInit {
 
     // Interview modal
     showInterviewModal = signal(false);
-    selectedInterview = signal<{ id: number; candidateName: string; jobTitle: string; startTime: string; endTime: string; date: string } | null>(null);
+    selectedInterview = signal<{
+        id: number;
+        candidateName: string;
+        jobTitle: string;
+        startTime: string;
+        endTime: string;
+        date: string;
+        interviewStatus?: string;
+        cancellationReason?: string;
+    } | null>(null);
 
     // Cancel modal
     showCancelModal = signal(false);
@@ -525,6 +659,16 @@ export class CompanyCalendarComponent implements OnInit {
     ngOnInit() {
         this.loadCalendar();
         this.loadUnavailabilities();
+
+        // Subscribe to real-time interview updates
+        this.unsubscribeSignalR = this.signalRService.onInterviewUpdate((update) => {
+            console.log('Calendar: SignalR interview update received, refreshing...', update);
+            this.loadCalendar();
+        });
+    }
+
+    ngOnDestroy() {
+        this.unsubscribeSignalR?.();
     }
 
     private getMonday(date: Date): Date {
@@ -609,7 +753,9 @@ export class CompanyCalendarComponent implements OnInit {
                 jobTitle: slot.jobTitle || 'Poste',
                 startTime: slot.startTime,
                 endTime: slot.endTime,
-                date: date
+                date: date,
+                interviewStatus: slot.interviewStatus,
+                cancellationReason: slot.cancellationReason
             });
             this.showInterviewModal.set(true);
             return;

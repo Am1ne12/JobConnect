@@ -32,6 +32,8 @@ export interface CalendarSlot {
     candidateName?: string;
     jobTitle?: string;
     interviewId?: number;
+    interviewStatus?: 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled' | 'InWaitingRoom';
+    cancellationReason?: string;
     blockReason?: string;
 }
 

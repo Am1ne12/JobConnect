@@ -499,6 +499,7 @@ export class BookInterviewComponent implements OnInit {
     // Booking state
     booking = signal(false);
     showSuccessModal = signal(false);
+    rescheduleId = signal<number | null>(null); // For rescheduling existing interview
 
     private isBrowser: boolean;
 
@@ -510,6 +511,13 @@ export class BookInterviewComponent implements OnInit {
         this.route.params.subscribe(params => {
             this.applicationId.set(+params['applicationId']);
             this.loadApplication();
+        });
+
+        // Check for reschedule mode
+        this.route.queryParams.subscribe(qp => {
+            if (qp['rescheduleId']) {
+                this.rescheduleId.set(+qp['rescheduleId']);
+            }
         });
     }
 
@@ -648,22 +656,44 @@ export class BookInterviewComponent implements OnInit {
         if (!this.selectedDate() || !this.selectedSlot()) return;
 
         this.booking.set(true);
-        this.scheduleService.bookSlot(
-            this.applicationId(),
-            this.selectedDate()!,
-            this.selectedSlot()!
-        ).subscribe({
-            next: (result) => {
-                this.booking.set(false);
-                this.showSuccessModal.set(true);
-            },
-            error: (err) => {
-                this.booking.set(false);
-                alert(err.error?.message || 'Erreur lors de la réservation');
-                // Reload slots in case of conflict
-                this.loadSlots(this.selectedDate()!);
-            }
-        });
+
+        // Check if this is a reschedule or a new booking
+        const rescheduleId = this.rescheduleId();
+        if (rescheduleId) {
+            // RESCHEDULE existing interview
+            this.scheduleService.rescheduleInterview(
+                rescheduleId,
+                this.selectedDate()!,
+                this.selectedSlot()!
+            ).subscribe({
+                next: (result) => {
+                    this.booking.set(false);
+                    this.showSuccessModal.set(true);
+                },
+                error: (err) => {
+                    this.booking.set(false);
+                    alert(err.error?.message || 'Erreur lors de la reprogrammation');
+                    this.loadSlots(this.selectedDate()!);
+                }
+            });
+        } else {
+            // NEW booking
+            this.scheduleService.bookSlot(
+                this.applicationId(),
+                this.selectedDate()!,
+                this.selectedSlot()!
+            ).subscribe({
+                next: (result) => {
+                    this.booking.set(false);
+                    this.showSuccessModal.set(true);
+                },
+                error: (err) => {
+                    this.booking.set(false);
+                    alert(err.error?.message || 'Erreur lors de la réservation');
+                    this.loadSlots(this.selectedDate()!);
+                }
+            });
+        }
     }
 
     closeSuccessModal() {

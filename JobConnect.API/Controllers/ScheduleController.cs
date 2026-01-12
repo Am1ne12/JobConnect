@@ -239,6 +239,16 @@ public class ScheduleController : ControllerBase
             notification.CreatedAt
         ));
 
+        // Also send InterviewUpdated for real-time calendar refresh
+        await _notificationHub.SendInterviewUpdateAsync(companyUser.Id, new InterviewUpdateMessage(
+            "scheduled",
+            interview.Id,
+            application.Id,
+            application.JobPosting.Title,
+            interview.ScheduledAt,
+            $"Entretien planifié avec {application.CandidateProfile.FirstName} {application.CandidateProfile.LastName}"
+        ));
+
         return Ok(new BookingResultDto(
             interview.Id,
             interview.ScheduledAt,
@@ -418,6 +428,16 @@ public class ScheduleController : ControllerBase
             notification.CreatedAt
         ));
 
+        // Also send InterviewUpdated for real-time calendar refresh
+        await _notificationHub.SendInterviewUpdateAsync(notifyUserId, new InterviewUpdateMessage(
+            "cancelled",
+            interview.Id,
+            interview.ApplicationId,
+            interview.Application.JobPosting.Title,
+            interview.ScheduledAt,
+            $"Entretien annulé par {cancellerName}"
+        ));
+
         return Ok(new { message = "Interview cancelled successfully" });
     }
 
@@ -488,6 +508,7 @@ public class ScheduleController : ControllerBase
         if (conflict)
             return Conflict("The new slot is not available");
 
+
         var unavailabilityConflict = await _context.CompanyUnavailabilities
             .AnyAsync(u => u.CompanyId == companyId &&
                            newScheduledAt < u.EndTime && newEndsAt > u.StartTime);
@@ -495,24 +516,14 @@ public class ScheduleController : ControllerBase
         if (unavailabilityConflict)
             return Conflict("The new slot is blocked");
 
-        // Mark old interview as rescheduled
-        interview.Status = InterviewStatus.Rescheduled;
-        interview.CancellationReason = dto.Reason;
+        // Store old date for notification message
+        var oldScheduledAt = interview.ScheduledAt;
 
-        // Create new interview
-        var newInterview = new Interview
-        {
-            ApplicationId = interview.ApplicationId,
-            CompanyId = companyId,
-            CandidateProfileId = interview.CandidateProfileId,
-            ScheduledAt = newScheduledAt,
-            EndsAt = newEndsAt,
-            Status = InterviewStatus.Scheduled,
-            JitsiRoomId = $"jobconnect-{Guid.NewGuid():N}",
-            RescheduledFromId = interview.Id
-        };
-
-        _context.Interviews.Add(newInterview);
+        // Simply UPDATE the existing interview dates (no new interview created)
+        interview.ScheduledAt = newScheduledAt;
+        interview.EndsAt = newEndsAt;
+        interview.UpdatedAt = DateTime.UtcNow;
+        
         await _context.SaveChangesAsync();
 
         // Notify the other party
@@ -533,9 +544,9 @@ public class ScheduleController : ControllerBase
         {
             UserId = notifyUserId,
             Title = "📅 Entretien reprogrammé",
-            Message = $"L'entretien a été déplacé par {reschedulerName} au {newScheduledAt:dd/MM/yyyy à HH:mm}",
+            Message = $"L'entretien a été déplacé par {reschedulerName} du {oldScheduledAt:dd/MM/yyyy à HH:mm} au {newScheduledAt:dd/MM/yyyy à HH:mm}",
             Type = "InterviewRescheduled",
-            RelatedId = newInterview.Id,
+            RelatedId = interview.Id,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
@@ -551,11 +562,21 @@ public class ScheduleController : ControllerBase
             notification.CreatedAt
         ));
 
+        // Also send InterviewUpdated for real-time calendar refresh
+        await _notificationHub.SendInterviewUpdateAsync(notifyUserId, new InterviewUpdateMessage(
+            "rescheduled",
+            interview.Id,
+            interview.ApplicationId,
+            interview.Application.JobPosting.Title,
+            interview.ScheduledAt,
+            $"Entretien reprogrammé au {newScheduledAt:dd/MM/yyyy à HH:mm}"
+        ));
+
         return Ok(new BookingResultDto(
-            newInterview.Id,
-            newInterview.ScheduledAt,
-            newInterview.EndsAt,
-            newInterview.JitsiRoomId,
+            interview.Id,
+            interview.ScheduledAt,
+            interview.EndsAt,
+            interview.JitsiRoomId,
             interview.Application.JobPosting.Company.Name,
             interview.Application.JobPosting.Title
         ));
@@ -609,7 +630,8 @@ public class ScheduleController : ControllerBase
             .Where(i => i.CompanyId == company.Id &&
                         i.ScheduledAt >= weekStartDt &&
                         i.ScheduledAt <= weekEndDt &&
-                        i.Status != InterviewStatus.Cancelled)
+                        i.Status != InterviewStatus.Cancelled &&
+                        i.Status != InterviewStatus.Rescheduled)
             .ToListAsync();
 
         // Get unavailabilities for the week
@@ -642,6 +664,8 @@ public class ScheduleController : ControllerBase
                 string? candidateName = null;
                 string? jobTitle = null;
                 int? interviewId = null;
+                string? interviewStatus = null;
+                string? cancellationReason = null;
 
                 if (interview != null)
                 {
@@ -649,6 +673,8 @@ public class ScheduleController : ControllerBase
                     candidateName = $"{interview.Application.CandidateProfile.FirstName} {interview.Application.CandidateProfile.LastName}";
                     jobTitle = interview.Application.JobPosting.Title;
                     interviewId = interview.Id;
+                    interviewStatus = interview.Status.ToString();
+                    cancellationReason = interview.CancellationReason;
                 }
                 else if (unavail != null)
                 {
@@ -670,6 +696,8 @@ public class ScheduleController : ControllerBase
                     candidateName,
                     jobTitle,
                     interviewId,
+                    interviewStatus,
+                    cancellationReason,
                     unavail?.Reason
                 ));
             }
@@ -694,6 +722,8 @@ public record CalendarSlotDto(
     string? CandidateName, 
     string? JobTitle,
     int? InterviewId,
+    string? InterviewStatus,
+    string? CancellationReason,
     string? BlockReason
 );
 public record DayCalendarDto(DateOnly Date, string DayName, List<CalendarSlotDto> Slots);

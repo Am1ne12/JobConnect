@@ -65,6 +65,7 @@ public class InterviewsController : ControllerBase
         }
 
         var interviews = await query
+            .Where(i => i.Status != InterviewStatus.Rescheduled) // Exclude old rescheduled interviews
             .OrderByDescending(i => i.ScheduledAt)
             .Select(i => MapToDto(i, userId))
             .ToListAsync();
