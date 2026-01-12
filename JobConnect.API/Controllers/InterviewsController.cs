@@ -393,7 +393,7 @@ public class InterviewsController : ControllerBase
     }
 
     /// <summary>
-    /// Get Daily.co room join details with meeting token (only available 5 min before and during interview)
+    /// Get 100ms room join details with meeting code (only available 5 min before and during interview)
     /// </summary>
     [HttpGet("{id}/join")]
     public async Task<ActionResult<InterviewJoinDto>> GetJoinDetails(int id)
@@ -437,7 +437,7 @@ public class InterviewsController : ControllerBase
         {
             return Ok(new InterviewJoinDto(
                 "",
-                "", // No domain for Daily.co
+                "", // No domain needed for 100ms prebuilt
                 displayName,
                 false,
                 $"Cet entretien a été {interview.Status.ToString().ToLower()}",

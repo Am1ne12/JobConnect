@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-# JobConnect - Plateforme de Recrutement
-
-## 📋 Description
-
-JobConnect est une plateforme de recrutement complète permettant aux **candidats** de postuler à des offres d'emploi et aux **entreprises** de gérer leurs recrutements. La plateforme inclut des fonctionnalités avancées comme la planification d'entretiens vidéo avec 100ms/Daily.co, un système de notifications en temps réel, et un tableau Kanban pour le suivi des candidatures.
-=======
 <p align="center">
   <img src="docs/images/logo.png" alt="JobConnect Logo" width="120">
 </p>
@@ -110,7 +103,25 @@ JobConnect est une plateforme de recrutement complète permettant aux **candidat
 | **Job Management** | Oversee all job postings across the platform with full CRUD capabilities. |
 | **Platform Oversight** | Complete visibility into all platform activity and data. |
 
-### 🔐 Authentication & Security
+### 🎥 Video Interviews (100ms)
+
+| Feature | Description |
+|---------|-------------|
+| **Interview Scheduling** | Candidates view company availability calendar and book 90-minute interview slots. |
+| **HD Video Room** | Powered by 100ms with real-time chat during the interview. |
+| **Reschedule/Cancel** | Full support for rescheduling to new slots and cancellation with reasons. |
+| **Status Tracking** | Interview states: Scheduled → InWaitingRoom → InProgress → Completed/Cancelled |
+
+### � Real-Time Notifications
+
+| Type | Trigger | Recipient |
+|------|---------|-----------|
+| `interview_scheduled` | Candidate schedules interview | Company |
+| `interview_cancelled` | Interview cancelled | Other party |
+| `application_received` | Candidate applies | Company |
+| `application_status` | Status changes in Kanban | Candidate |
+
+### �🔐 Authentication & Security
 
 - JWT-based authentication with secure token refresh
 - BCrypt password hashing
@@ -210,7 +221,6 @@ npm install
 # Start development server
 npm start
 ```
->>>>>>> upstream/main
 
 ---
 
@@ -218,141 +228,6 @@ npm start
 
 ```
 JobConnect/
-<<<<<<< HEAD
-├── JobConnect.API/          # Backend .NET 8 (C#)
-│   ├── Controllers/         # API REST endpoints
-│   ├── Models/              # Entités de base de données
-│   ├── Services/            # Logique métier
-│   └── Data/                # DbContext EF Core
-│
-└── jobconnect-frontend/     # Frontend Angular 19
-    ├── src/app/
-    │   ├── core/            # Services partagés
-    │   ├── features/        # Composants par fonctionnalité
-    │   └── shared/          # Composants réutilisables
-    └── ...
-```
-
----
-
-## 🛠️ Stack Technique
-
-| Composant | Technologie |
-|-----------|-------------|
-| **Backend** | .NET 8, Entity Framework Core |
-| **Frontend** | Angular 19, TypeScript, SCSS |
-| **Base de données** | PostgreSQL |
-| **Vidéoconférence** | 100ms / Daily.co |
-| **Authentification** | JWT (JSON Web Tokens) |
-
----
-
-## 🎯 Fonctionnalités Principales
-
-### 1. Gestion des Utilisateurs
-- **Inscription/Connexion** avec authentification JWT
-- **Deux rôles** : Candidat et Entreprise
-- **Profils** personnalisables avec CV, compétences, expériences
-
-### 2. Offres d'Emploi
-- Création, modification, publication d'offres
-- Filtrage par localisation, type de contrat, salaire
-- Score de matching automatique candidat/offre
-
-### 3. Candidatures
-- Suivi des candidatures en temps réel
-- Tableau Kanban pour les entreprises (Submitted → Screening → Interview → Offer → Hired/Rejected)
-- Notes et commentaires sur les candidats
-
-### 4. Entretiens Vidéo (100ms/Daily.co)
-- Planification d'entretiens par les candidats
-- Salle vidéo intégrée (accessible 5 min avant l'entretien)
-- Report et annulation avec motif
-- Chat en temps réel pendant l'entretien
-
-### 5. Système de Notifications
-- Notifications persistantes en base de données
-- Dropdown dans la navbar avec badge de comptage
-- Plusieurs types de notifications automatiques
-
----
-
-## 🔔 Système de Notifications
-
-### Types de Notifications
-
-| Type | Déclencheur | Destinataire | Message |
-|------|-------------|--------------|---------|
-| `interview_scheduled` | Candidat planifie un entretien | Entreprise | "X a planifié un entretien pour Y le Z" |
-| `interview_cancelled` | Annulation d'entretien | L'autre partie | "X a annulé l'entretien pour Y" |
-| `application_received` | Candidat postule | Entreprise | "X a postulé à votre offre Y" |
-| `application_status` | Changement de statut dans Kanban | Candidat | "Votre candidature est passée à l'étape: X" |
-
-### API Endpoints
-
-```http
-GET    /api/notifications           # Liste des notifications
-GET    /api/notifications/count     # Nombre non lues
-PUT    /api/notifications/{id}/read # Marquer comme lue
-PUT    /api/notifications/read-all  # Tout marquer comme lu
-DELETE /api/notifications/{id}      # Supprimer une notification
-DELETE /api/notifications           # Supprimer toutes
-```
-
-### Frontend Service
-
-```typescript
-// notification.service.ts
-appNotifications = signal<AppNotification[]>([]);
-unreadCount = computed(() => this.appNotifications().filter(n => !n.isRead).length);
-
-loadNotifications()        // Charge depuis l'API
-markAsRead(id)             // Marque une notification comme lue
-markAllAsRead()            // Marque toutes comme lues
-deleteNotification(id)     // Supprime une notification
-deleteAllNotifications()   // Supprime toutes les notifications
-```
-
----
-
-## 🎥 Entretiens Vidéo (100ms/Daily.co)
-
-### Configuration
-
-```env
-# JobConnect.API/.env
-DAILY_API_KEY=your_daily_api_key_here
-```
-
-### Flux de Planification
-
-1. **Candidat** consulte les disponibilités de l'entreprise
-2. **Candidat** sélectionne un créneau et planifie l'entretien
-3. **Système** crée une room Daily.co avec tokens d'accès
-4. **5 minutes avant** : bouton "Rejoindre" activé
-5. **Pendant l'entretien** : vidéo HD + chat intégré
-
-### API Endpoints
-
-```http
-POST   /api/interviews                    # Créer un entretien
-GET    /api/interviews                    # Liste des entretiens
-GET    /api/interviews/{id}               # Détails d'un entretien
-GET    /api/interviews/{id}/join          # Obtenir token pour rejoindre
-PUT    /api/interviews/{id}/cancel        # Annuler avec motif
-PUT    /api/interviews/{id}/reschedule    # Reporter
-POST   /api/interviews/{id}/messages      # Envoyer un message
-```
-
-### Service de Planification
-
-```csharp
-// InterviewSchedulingService.cs
-ScheduleInterviewAsync(applicationId, scheduledAt, candidateId)
-CancelInterviewAsync(interviewId, reason)         // Supprime l'entretien
-RescheduleInterviewAsync(interviewId, newDate, reason)
-GenerateMeetingToken(interview, role)             // Token Daily.co
-=======
 ├── 📁 JobConnect.API/                 # .NET 9 Web API
 │   ├── Controllers/
 │   │   ├── AuthController.cs          # Registration, login, password management
@@ -360,6 +235,8 @@ GenerateMeetingToken(interview, role)             // Token Daily.co
 │   │   ├── CandidatesController.cs    # Candidate profile management
 │   │   ├── CompaniesController.cs     # Company dashboard, kanban
 │   │   ├── ApplicationsController.cs  # Job applications
+│   │   ├── InterviewsController.cs    # Video interview scheduling
+│   │   ├── NotificationsController.cs # Real-time notifications
 │   │   └── SkillsController.cs        # Skills catalog
 │   ├── Models/
 │   │   ├── User.cs                    # User entity with roles
@@ -367,10 +244,13 @@ GenerateMeetingToken(interview, role)             // Token Daily.co
 │   │   ├── Company.cs                 # Company profile
 │   │   ├── JobPosting.cs              # Job with status lifecycle
 │   │   ├── Application.cs             # Application with kanban order
+│   │   ├── Interview.cs               # Scheduled video interviews
+│   │   ├── Notification.cs            # Persistent notifications
 │   │   └── Skill.cs                   # Skills with proficiency
 │   ├── Services/
 │   │   ├── AuthService.cs             # JWT token generation
-│   │   └── MatchingScoreService.cs    # Score calculation algorithm
+│   │   ├── MatchingScoreService.cs    # Score calculation algorithm
+│   │   └── InterviewSchedulingService.cs # 100ms integration
 │   ├── Data/
 │   │   └── ApplicationDbContext.cs    # EF Core context
 │   └── DTOs/                          # Data transfer objects
@@ -389,12 +269,13 @@ GenerateMeetingToken(interview, role)             // Token Daily.co
 │       │   ├── candidate/
 │       │   │   ├── cv-builder/        # Profile editor
 │       │   │   └── application-tracker/
-│       │   └── company/
-│       │       ├── dashboard/         # Company overview
-│       │       ├── job-create/        # Job posting form
-│       │       ├── job-edit/          # Edit existing jobs
-│       │       ├── candidates/        # Kanban board
-│       │       └── candidate-profile-modal/
+│       │   ├── company/
+│       │   │   ├── dashboard/         # Company overview
+│       │   │   ├── job-create/        # Job posting form
+│       │   │   ├── job-edit/          # Edit existing jobs
+│       │   │   ├── candidates/        # Kanban board
+│       │   │   └── candidate-profile-modal/
+│       │   └── interview/             # Video room, scheduling
 │       └── shared/                    # Reusable components
 │
 ├── 📄 docker-compose.yml              # Container orchestration
@@ -412,6 +293,7 @@ GenerateMeetingToken(interview, role)             // Token Daily.co
 | **ORM** | Entity Framework Core | Database operations |
 | **Database** | PostgreSQL 16 | Data persistence with JSONB |
 | **Auth** | JWT + BCrypt | Secure authentication |
+| **Video** | 100ms | HD video conferencing |
 | **Container** | Docker Compose | Development environment |
 
 ---
@@ -464,6 +346,29 @@ GenerateMeetingToken(interview, role)             // Token Daily.co
 | `POST` | `/api/applications` | Apply to job | Candidate |
 | `GET` | `/api/applications/:id` | Get application details | Auth |
 
+### Interviews
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/api/interviews` | Schedule interview | Candidate |
+| `GET` | `/api/interviews` | List interviews | Auth |
+| `GET` | `/api/interviews/:id` | Get interview details | Auth |
+| `GET` | `/api/interviews/:id/join` | Get 100ms meeting room code | Auth |
+| `PUT` | `/api/interviews/:id/cancel` | Cancel with reason | Auth |
+| `PUT` | `/api/interviews/:id/reschedule` | Reschedule interview | Auth |
+| `POST` | `/api/interviews/:id/messages` | Send chat message | Auth |
+
+### Notifications
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/api/notifications` | List notifications | Yes |
+| `GET` | `/api/notifications/count` | Unread count | Yes |
+| `PUT` | `/api/notifications/:id/read` | Mark as read | Yes |
+| `PUT` | `/api/notifications/read-all` | Mark all as read | Yes |
+| `DELETE` | `/api/notifications/:id` | Delete notification | Yes |
+| `DELETE` | `/api/notifications` | Delete all | Yes |
+
 ### Skills
 
 | Method | Endpoint | Description | Auth |
@@ -488,78 +393,19 @@ JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLong!
 # CORS Configuration
 CORS_ORIGINS=http://localhost:4200,http://localhost:4201
 
+# 100ms Video Conferencing
+HMS_ACCESS_KEY=your_100ms_access_key
+HMS_SECRET=your_100ms_secret
+HMS_TEMPLATE_ID=your_100ms_template_id
+
 # pgAdmin (optional)
 PGADMIN_EMAIL=admin@admin.com
 PGADMIN_PASSWORD=admin123
->>>>>>> upstream/main
 ```
 
 ---
 
-<<<<<<< HEAD
-## 📊 Tableau Kanban (Entreprises)
-
-### Colonnes
-
-| Statut | Couleur | Description |
-|--------|---------|-------------|
-| Submitted | 🔵 Bleu | Nouvelles candidatures |
-| Screening | 🟡 Jaune | En cours d'examen |
-| Interview | 🟣 Violet | Entretien planifié |
-| Offer | 🟢 Vert | Offre envoyée |
-| Hired | ✅ Vert foncé | Candidat embauché |
-| Rejected | 🔴 Rouge | Candidature refusée |
-
-### API Endpoint
-
-```http
-POST /api/companies/jobs/{jobId}/kanban/reorder
-
-Body: [
-  { "applicationId": 1, "newStatus": "Screening", "newOrder": 0 },
-  { "applicationId": 2, "newStatus": "Interview", "newOrder": 1 }
-]
-```
-
----
-
-## 🔐 Authentification
-
-### JWT Configuration
-
-```json
-// appsettings.json
-{
-  "Jwt": {
-    "Key": "your-secret-key-min-32-characters",
-    "Issuer": "JobConnect",
-    "Audience": "JobConnect"
-  }
-}
-```
-
-### Endpoints
-
-```http
-POST /api/auth/register    # Inscription
-POST /api/auth/login       # Connexion (retourne JWT)
-GET  /api/auth/me          # Utilisateur courant
-```
-
----
-
-## 🚀 Installation et Lancement
-
-### Prérequis
-
-- .NET 8 SDK
-- Node.js 18+
-- PostgreSQL
-- Docker (optionnel)
-
-### Backend
-=======
-## 📁 Data Models
+## � Data Models
 
 ### Job Status Lifecycle
 
@@ -569,6 +415,17 @@ GET  /api/auth/me          # Utilisateur courant
 | `Published` | Active and searchable |
 | `Closed` | No longer accepting applications |
 | `Archived` | Historical record |
+
+### Application Status (Kanban)
+
+| Status | Color | Description |
+|--------|-------|-------------|
+| Submitted | 🔵 Blue | New applications |
+| Screening | 🟡 Yellow | Under review |
+| Interview | 🟣 Purple | Interview scheduled |
+| Offer | 🟢 Green | Offer sent |
+| Hired | ✅ Dark Green | Candidate hired |
+| Rejected | 🔴 Red | Application rejected |
 
 ### Proficiency Levels
 
@@ -585,44 +442,10 @@ GET  /api/auth/me          # Utilisateur courant
 ## 🧪 Development
 
 ### Database Migrations
->>>>>>> upstream/main
 
 ```bash
 cd JobConnect.API
 
-<<<<<<< HEAD
-# Configuration
-cp .env.example .env
-# Éditer .env avec vos credentials
-
-# Lancer
-dotnet run
-# → http://localhost:5001
-```
-
-### Frontend
-
-```bash
-cd jobconnect-frontend
-
-npm install
-npm start
-# → http://localhost:4200
-```
-
-### Base de données
-
-```bash
-# Avec Docker
-docker run -d \
-  --name jobconnect-db \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=jobconnect \
-  -p 5432:5432 \
-  postgres:15
-
-# Migrations automatiques au démarrage de l'API
-=======
 # Add a new migration
 dotnet ef migrations add MigrationName
 
@@ -671,101 +494,10 @@ npm test
 ```bash
 cd JobConnect.API
 dotnet test
->>>>>>> upstream/main
 ```
 
 ---
 
-<<<<<<< HEAD
-## 📁 Structure des Modèles
-
-### Entités Principales
-
-```csharp
-User                    // Utilisateur (email, password, role)
-CandidateProfile        // Profil candidat (CV, compétences)
-Company                 // Profil entreprise
-JobPosting              // Offre d'emploi
-Application             // Candidature
-Interview               // Entretien planifié
-Notification            // Notification persistante
-```
-
-### Relations
-
-```
-User ←→ CandidateProfile (1:1)
-User ←→ Company (1:1)
-Company → JobPosting (1:N)
-JobPosting → Application (1:N)
-CandidateProfile → Application (1:N)
-Application → Interview (1:1)
-User → Notification (1:N)
-```
-
----
-
-## 🔧 Composants Frontend Clés
-
-### Shared Components
-
-| Composant | Description |
-|-----------|-------------|
-| `ConfirmModalComponent` | Modal de confirmation avec input optionnel |
-| `NotificationService` | Gestion des notifications (toast + persistantes) |
-
-### Features
-
-| Module | Composants |
-|--------|------------|
-| `interview/` | `InterviewListComponent`, `BookInterviewComponent`, `VideoRoomComponent` |
-| `company/` | `KanbanBoardComponent`, `CandidatesViewComponent`, `DashboardComponent` |
-| `candidate/` | `ApplicationTrackerComponent`, `CVBuilderComponent` |
-
----
-
-## 📝 Variables d'Environnement
-
-### Backend (.env)
-
-```env
-# Base de données
-DATABASE_URL=Host=localhost;Database=jobconnect;Username=postgres;Password=postgres
-
-# JWT
-JWT_KEY=your-secret-key-at-least-32-characters-long
-JWT_ISSUER=JobConnect
-JWT_AUDIENCE=JobConnect
-
-# Daily.co (Vidéoconférence)
-DAILY_API_KEY=your_daily_api_key
-```
-
-### Frontend (environment.ts)
-
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:5001/api'
-};
-```
-
----
-
-## 📄 Licence
-
-MIT License - voir [LICENSE](LICENSE) pour plus de détails.
-
----
-
-## 👥 Auteurs
-
-- **Amine** - Développeur Full Stack
-
----
-
-*Documentation générée le 07/01/2026*
-=======
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -779,4 +511,3 @@ MIT License - voir [LICENSE](LICENSE) pour plus de détails.
 <p align="center">
   Made with ❤️
 </p>
->>>>>>> upstream/main

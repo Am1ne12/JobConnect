@@ -190,15 +190,13 @@ Set the following environment variables in Coolify:
 | `JwtSettings__Audience` | JWT audience | `JobConnectUsers` | Yes |
 | `JwtSettings__ExpiryMinutes` | Token expiration | `60` | Yes |
 | `CorsOrigins` | Allowed CORS origins | `https://yourdomain.com,https://www.yourdomain.com` | Yes |
-<<<<<<< HEAD
-
-> **Tip**: Use Coolify's magic variables for passwords: `${SERVICE_PASSWORD_64_BACKEND}` to auto-generate a secure JWT secret.
-
-=======
 | `ADMIN_EMAIL` | Default admin account email | `admin@jobconnect.com` | No |
 | `ADMIN_PASSWORD` | Default admin account password | `Admin123!` | No |
 | `SEED_DATABASE` | Enable database seeding | `true` or `false` | No |
 | `FORCE_SEED` | Force seeding even if data exists | `true` or `false` | No |
+| `HMS_ACCESS_KEY` | 100ms access key | (from 100ms dashboard) | No |
+| `HMS_SECRET` | 100ms secret key | (from 100ms dashboard) | No |
+| `HMS_TEMPLATE_ID` | 100ms room template ID | (from 100ms dashboard) | No |
 
 > **Tip**: Use Coolify's magic variables for passwords: `${SERVICE_PASSWORD_64_BACKEND}` to auto-generate a secure JWT secret.
 
@@ -219,7 +217,6 @@ The seeder creates:
 
 > **Note**: If data already exists, the seeder will skip by default. Use `FORCE_SEED=true` to add sample data even if the database isn't empty.
 
->>>>>>> upstream/main
 ### Configuring the Domain and Port
 
 1. In the backend resource settings, go to **Settings**
@@ -344,6 +341,9 @@ services:
       - JwtSettings__Audience=JobConnectUsers
       - JwtSettings__ExpiryMinutes=60
       - CorsOrigins=${CORS_ORIGINS:-http://localhost:4200}
+      - HMS_ACCESS_KEY=${HMS_ACCESS_KEY:-}
+      - HMS_SECRET=${HMS_SECRET:-}
+      - HMS_TEMPLATE_ID=${HMS_TEMPLATE_ID:-}
     depends_on:
       postgres:
         condition: service_healthy

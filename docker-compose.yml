@@ -56,6 +56,9 @@ services:
       - FORCE_SEED=${FORCE_SEED:-false}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@jobconnect.com}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-Admin123!}
+      - HMS_ACCESS_KEY=${HMS_ACCESS_KEY:-}
+      - HMS_SECRET=${HMS_SECRET:-}
+      - HMS_TEMPLATE_ID=${HMS_TEMPLATE_ID:-}
     ports:
       - "5001:5000"
     depends_on:
