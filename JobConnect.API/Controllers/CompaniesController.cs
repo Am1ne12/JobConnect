@@ -43,7 +43,8 @@ public class CompaniesController : ControllerBase
             company.Website,
             company.Location,
             company.LogoUrl,
-            company.EmployeeCount
+            company.EmployeeCount,
+            company.CalendarLink
         ));
     }
 
@@ -62,6 +63,7 @@ public class CompaniesController : ControllerBase
         if (dto.Website != null) company.Website = dto.Website;
         if (dto.Location != null) company.Location = dto.Location;
         if (dto.EmployeeCount.HasValue) company.EmployeeCount = dto.EmployeeCount;
+        if (dto.CalendarLink != null) company.CalendarLink = dto.CalendarLink;
 
         company.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -75,7 +77,8 @@ public class CompaniesController : ControllerBase
             company.Website,
             company.Location,
             company.LogoUrl,
-            company.EmployeeCount
+            company.EmployeeCount,
+            company.CalendarLink
         ));
     }
 

@@ -86,8 +86,8 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/company/candidates/candidates-view.component').then(m => m.CandidatesViewComponent)
             },
             {
-                path: 'availability',
-                loadComponent: () => import('./features/company/availability-config/availability-config.component').then(m => m.AvailabilityConfigComponent)
+                path: 'calendar',
+                loadComponent: () => import('./features/company/calendar/company-calendar.component').then(m => m.CompanyCalendarComponent)
             },
             {
                 path: '',

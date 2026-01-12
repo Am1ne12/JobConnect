@@ -39,19 +39,16 @@ import { Company, JobPosting } from '../../../core/models';
         </div>
       </div>
 
-      <!-- Availability Setup Section -->
+      <!-- Cal.com Integration Section -->
       <div class="availability-section">
         <div class="availability-card">
           <div class="availability-icon">📅</div>
           <div class="availability-info">
-            <h3>Disponibilités pour les entretiens</h3>
-            <p>{{ hasAvailability() ? 'Vos créneaux sont configurés' : 'Configurez vos créneaux pour recevoir des candidats' }}</p>
+            <h3>Mon Agenda</h3>
+            <p>Gérez vos disponibilités et entretiens</p>
           </div>
-          @if (hasAvailability()) {
-            <span class="availability-status">✓ Configuré</span>
-          }
-          <a routerLink="/company/availability" class="btn-setup">
-            ⚙️ {{ hasAvailability() ? 'Modifier' : 'Configurer' }}
+          <a routerLink="/company/calendar" class="btn-setup">
+            📅 Voir l'agenda
           </a>
         </div>
       </div>
@@ -116,6 +113,7 @@ export class CompanyDashboardComponent implements OnInit {
   jobs = signal<JobPosting[]>([]);
   loading = signal(true);
   hasAvailability = signal(false);
+  hasCalendarLink = signal(false);
   settingUpAvailability = signal(false);
 
   totalApplications = signal(0);
@@ -134,6 +132,7 @@ export class CompanyDashboardComponent implements OnInit {
   private loadData() {
     this.companyService.getProfile().subscribe(company => {
       this.company.set(company);
+      this.hasCalendarLink.set(!!company.calendarLink);
     });
 
     this.companyService.getJobs().subscribe({

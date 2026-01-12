@@ -126,7 +126,8 @@ public record CompanyDto(
     string? Website,
     string? Location,
     string? LogoUrl,
-    int? EmployeeCount
+    int? EmployeeCount,
+    string? CalendarLink
 );
 
 public record CreateCompanyDto(
@@ -143,7 +144,8 @@ public record UpdateCompanyDto(
     string? Industry,
     string? Website,
     string? Location,
-    int? EmployeeCount
+    int? EmployeeCount,
+    string? CalendarLink
 );
 
 // Job DTOs

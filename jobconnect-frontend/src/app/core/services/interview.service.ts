@@ -10,6 +10,7 @@ import {
     CompanyAvailability,
     UpdateAvailabilityRequest,
     AvailableSlot,
+    CalendarSlot,
     InterviewMessage,
     SendMessageRequest
 } from '../models';
@@ -74,7 +75,6 @@ export class InterviewService {
     getAvailableSlots(companyId: number, startDate?: Date, days: number = 14): Observable<AvailableSlot[]> {
         let params = new HttpParams().set('days', days.toString());
         if (startDate) {
-            // Format date as yyyy-MM-dd to avoid UTC conversion from toISOString()
             const year = startDate.getFullYear();
             const month = String(startDate.getMonth() + 1).padStart(2, '0');
             const day = String(startDate.getDate()).padStart(2, '0');

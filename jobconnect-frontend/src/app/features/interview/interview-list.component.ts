@@ -1,9 +1,11 @@
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { InterviewService } from '../../core/services/interview.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { SignalRService } from '../../core/services/signalr.service';
 import { Interview } from '../../core/models';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal.component';
 
@@ -642,24 +644,43 @@ import { ConfirmModalComponent } from '../../shared/components/confirm-modal.com
         }
     `]
 })
-export class InterviewListComponent implements OnInit {
+export class InterviewListComponent implements OnInit, OnDestroy {
     private interviewService = inject(InterviewService);
     private authService = inject(AuthService);
     private router = inject(Router);
+    private signalRService = inject(SignalRService);
 
     interviews: Interview[] = [];
     loading = true;
     isCompany = false;
+    private unsubscribeSignalR?: () => void;
 
     ngOnInit() {
         this.isCompany = this.authService.isCompany();
         this.loadInterviews();
+
+        // Subscribe to real-time interview updates via SignalR
+        this.unsubscribeSignalR = this.signalRService.onInterviewUpdate((update) => {
+            console.log('SignalR: Interview update received', update);
+            this.loadInterviews(); // Refresh the list when any interview update occurs
+        });
+    }
+
+    ngOnDestroy() {
+        this.unsubscribeSignalR?.();
     }
 
     loadInterviews() {
         this.loading = true;
         this.interviewService.getInterviews().subscribe({
             next: (interviews) => {
+                // Debug: log companyJoinedAt values
+                console.log('Interviews loaded:', interviews.map(i => ({
+                    id: i.id,
+                    status: i.status,
+                    companyJoinedAt: i.companyJoinedAt
+                })));
+
                 // Filter out rescheduled interviews (they are just historical records)
                 this.interviews = interviews.filter(i => i.status !== 'Rescheduled');
                 this.loading = false;

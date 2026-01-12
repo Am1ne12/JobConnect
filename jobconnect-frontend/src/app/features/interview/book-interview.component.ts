@@ -1,9 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { InterviewService } from '../../core/services/interview.service';
-import { AuthService } from '../../core/services/auth.service';
-import { AvailableSlot } from '../../core/models';
+import { Component, OnInit, inject, signal, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ApplicationService } from '../../core/services/application.service';
+import { ScheduleService, Slot } from '../../core/services/schedule.service';
 
 @Component({
     selector: 'app-book-interview',
@@ -11,780 +10,676 @@ import { AvailableSlot } from '../../core/models';
     imports: [CommonModule, RouterModule],
     template: `
         <div class="booking-container">
-            <!-- Hero Header -->
+            <!-- Header -->
             <div class="booking-header">
-                <div class="header-orb header-orb-1"></div>
-                <div class="header-orb header-orb-2"></div>
-                
                 <a routerLink="/candidate/applications" class="back-link">
                     <span class="back-icon">←</span> Retour aux candidatures
                 </a>
                 
                 <h1>Planifier un <span class="gradient-text">entretien</span></h1>
-                <p class="subtitle">Sélectionnez un créneau d'1h30 pour votre entretien vidéo</p>
+                <p class="subtitle">Sélectionnez une date et un créneau disponible</p>
             </div>
 
             <div class="booking-content">
                 @if (loading()) {
                     <div class="loading-state">
                         <div class="spinner"></div>
-                        <p>Chargement des créneaux disponibles...</p>
+                        <p>Chargement...</p>
                     </div>
                 } @else if (error()) {
                     <div class="error-state">
                         <div class="error-icon">⚠️</div>
-                        <h3>Une erreur est survenue</h3>
+                        <h3>{{ errorTitle() }}</h3>
                         <p>{{ errorMessage() }}</p>
                         <a routerLink="/candidate/applications" class="btn-primary">Retour</a>
                     </div>
-                } @else if (confirmed()) {
-                    <div class="success-state">
-                        <div class="success-icon">🎉</div>
-                        <h2>Entretien confirmé !</h2>
-                        <p class="success-text">Votre entretien a été planifié avec succès</p>
-                        <div class="confirmed-card">
-                            <div class="confirmed-date">
-                                <span class="date-icon">📅</span>
-                                {{ formatDate(selectedSlot()!) }}
-                            </div>
-                            <div class="confirmed-time">
-                                <span class="time-icon">🕐</span>
-                                {{ formatTime(selectedSlot()?.startTime!) }} - {{ formatTime(selectedSlot()?.endTime!) }}
-                            </div>
-                        </div>
-                        <div class="success-actions">
-                            <a routerLink="/interviews" class="btn-primary">
-                                📹 Voir mes entretiens
-                            </a>
-                            <a routerLink="/candidate/applications" class="btn-secondary">
-                                Retour aux candidatures
-                            </a>
-                        </div>
-                    </div>
                 } @else {
-                    <!-- Week Navigation -->
-                    <div class="week-nav">
-                        <button 
-                            (click)="previousWeek()" 
-                            [disabled]="weekOffset() === 0" 
-                            class="nav-btn nav-prev"
-                        >
-                            ← Semaine précédente
-                        </button>
-                        <div class="week-label">{{ getWeekLabel() }}</div>
-                        <button (click)="nextWeek()" class="nav-btn nav-next">
-                            Semaine suivante →
-                        </button>
+                    <!-- Application Info -->
+                    <div class="application-info">
+                        <div class="info-badge">
+                            <span class="badge-icon">💼</span>
+                            <span>{{ jobTitle() }}</span>
+                        </div>
+                        <div class="info-badge">
+                            <span class="badge-icon">🏢</span>
+                            <span>{{ companyName() }}</span>
+                        </div>
                     </div>
 
-                    <!-- Calendar Grid -->
-                    <div class="calendar-grid">
-                        @for (day of weekDays(); track day.date; let i = $index) {
-                            <div class="day-column" [style.animation-delay]="(i * 0.08) + 's'">
-                                <div class="day-header">
-                                    <span class="day-name">{{ day.name }}</span>
-                                    <span class="day-date">{{ day.dateLabel }}</span>
+                    <div class="calendar-wrapper">
+                        <!-- Calendar Navigation -->
+                        <div class="calendar-nav">
+                            <button (click)="previousMonth()" class="nav-btn">←</button>
+                            <h3>{{ currentMonthYear() }}</h3>
+                            <button (click)="nextMonth()" class="nav-btn">→</button>
+                        </div>
+
+                        <!-- Calendar Grid -->
+                        <div class="calendar-grid">
+                            <div class="weekday-header">
+                                @for (day of weekDays; track day) {
+                                    <div class="weekday">{{ day }}</div>
+                                }
+                            </div>
+                            <div class="days-grid">
+                                @for (day of calendarDays(); track day.date) {
+                                    <button 
+                                        class="day-cell"
+                                        [class.other-month]="!day.currentMonth"
+                                        [class.today]="day.isToday"
+                                        [class.selected]="day.date === selectedDate()"
+                                        [class.past]="day.isPast && day.currentMonth"
+                                        [class.weekend]="day.isWeekend && !day.isPast && day.currentMonth"
+                                        [disabled]="day.isPast || day.isWeekend || !day.currentMonth"
+                                        (click)="selectDate(day.date)">
+                                        {{ day.dayNumber }}
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slots Section -->
+                    @if (selectedDate()) {
+                        <div class="slots-section">
+                            <h3>Créneaux disponibles le {{ formatSelectedDate() }}</h3>
+                            
+                            @if (loadingSlots()) {
+                                <div class="slots-loading">
+                                    <div class="spinner small"></div>
+                                    <span>Chargement des créneaux...</span>
                                 </div>
-                                <div class="slots-list">
-                                    @for (slot of day.slots; track slot.startTime) {
+                            } @else if (availableSlots().length === 0) {
+                                <div class="no-slots">
+                                    <span class="no-slots-icon">😔</span>
+                                    <p>Aucun créneau disponible pour cette date</p>
+                                    <small>Essayez une autre date</small>
+                                </div>
+                            } @else {
+                                <div class="slots-grid">
+                                    @for (slot of availableSlots(); track slot.startTime) {
                                         <button 
-                                            class="slot-btn"
-                                            [class.selected]="isSelected(slot)"
-                                            (click)="selectSlot(slot)"
-                                        >
-                                            <span class="slot-time">{{ formatTime(slot.startTime) }}</span>
-                                            <span class="slot-check">✓</span>
+                                            class="slot-pill"
+                                            [class.selected]="selectedSlot() === slot.startTime"
+                                            (click)="selectSlot(slot.startTime)">
+                                            {{ slot.startTime }} - {{ slot.endTime }}
                                         </button>
-                                    } @empty {
-                                        <div class="no-slots">
-                                            <span class="no-slots-icon">📭</span>
-                                            <span>Aucun créneau</span>
-                                        </div>
                                     }
                                 </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
+                    }
 
-                    <!-- Confirmation Bar -->
-                    @if (selectedSlot()) {
-                        <div class="confirmation-bar">
-                            <div class="selected-info">
-                                <span class="selected-label">Créneau sélectionné</span>
-                                <span class="selected-datetime">
-                                    {{ formatDate(selectedSlot()!) }} à {{ formatTime(selectedSlot()?.startTime!) }}
-                                </span>
+                    <!-- Confirm Button -->
+                    @if (selectedDate() && selectedSlot()) {
+                        <div class="confirm-section">
+                            <div class="confirm-summary">
+                                <p>📅 <strong>{{ formatSelectedDate() }}</strong> à <strong>{{ selectedSlot() }}</strong></p>
+                                <p>Durée : 1h30</p>
                             </div>
                             <button 
-                                (click)="confirmBooking()" 
                                 class="btn-confirm" 
                                 [disabled]="booking()"
-                            >
+                                (click)="confirmBooking()">
                                 @if (booking()) {
-                                    <span class="btn-spinner"></span> Confirmation...
+                                    <span class="spinner small"></span> Réservation en cours...
                                 } @else {
-                                    ✅ Confirmer l'entretien
+                                    ✓ Confirmer le rendez-vous
                                 }
                             </button>
                         </div>
                     }
                 }
             </div>
+
+            <!-- Success Modal -->
+            @if (showSuccessModal()) {
+                <div class="modal-overlay" (click)="closeSuccessModal()">
+                    <div class="modal-content" (click)="$event.stopPropagation()">
+                        <div class="success-icon">🎉</div>
+                        <h2>Entretien confirmé !</h2>
+                        <p>Votre entretien est programmé pour le</p>
+                        <p class="booking-details">
+                            <strong>{{ formatSelectedDate() }}</strong> à <strong>{{ selectedSlot() }}</strong>
+                        </p>
+                        <p class="company-info">avec <strong>{{ companyName() }}</strong></p>
+                        <small>Vous recevrez un email de confirmation avec le lien de visioconférence.</small>
+                        <button class="btn-primary" (click)="goToApplications()">
+                            Voir mes candidatures
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     `,
     styles: [`
-        /* Container & Layout */
         .booking-container {
             min-height: 100vh;
             background: var(--bg-secondary);
+            padding-bottom: 3rem;
         }
 
-        /* Header */
         .booking-header {
+            padding: 2rem 2rem 1.5rem;
             text-align: center;
-            padding: 3rem 2rem 2rem;
-            position: relative;
-            overflow: hidden;
-            background: var(--bg-secondary);
-        }
-
-        .header-orb {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: float 8s ease-in-out infinite;
-        }
-
-        .header-orb-1 {
-            top: -60px;
-            left: 8%;
-            width: 280px;
-            height: 280px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
-        }
-
-        .header-orb-2 {
-            top: -20px;
-            right: 8%;
-            width: 220px;
-            height: 220px;
-            background: radial-gradient(circle, rgba(168, 85, 247, 0.06) 0%, transparent 60%);
-            animation-delay: 2s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(12px, -12px); }
         }
 
         .back-link {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            color: var(--text-secondary);
+            color: #6b7280;
             text-decoration: none;
             font-size: 0.875rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             transition: color 0.2s;
         }
 
-        .back-link:hover {
-            color: var(--accent);
-        }
-
-        .back-icon {
-            font-size: 1.25rem;
-        }
+        .back-link:hover { color: #7c3aed; }
 
         h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin: 0 0 0.75rem;
-            letter-spacing: -0.03em;
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            max-width: 450px;
-            margin: 0 auto;
-        }
-
-        /* Content */
-        .booking-content {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 2rem 3rem;
-        }
-
-        /* Loading State */
-        .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 400px;
-            color: var(--text-secondary);
-        }
-
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 3px solid var(--border-default);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Error & Success States */
-        .error-state, .success-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--border-light);
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .error-icon, .success-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .error-state h3, .success-state h2 {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: #1f2937;
             margin: 0 0 0.5rem;
         }
 
-        .success-text {
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
+        .gradient-text { color: #7c3aed; }
+
+        .subtitle { color: #6b7280; margin: 0; }
+
+        .booking-content {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
         }
 
-        .confirmed-card {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+        .loading-state, .error-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
-        .confirmed-date, .confirmed-time {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            font-size: 1rem;
-            color: var(--text-primary);
-            font-weight: 500;
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #7c3aed;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
         }
+        .spinner.small { width: 20px; height: 20px; border-width: 2px; margin: 0; }
 
-        .confirmed-date {
-            margin-bottom: 0.75rem;
-            font-size: 1.125rem;
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .error-state h3 { color: #1f2937; margin: 0 0 0.5rem; }
+        .error-state p { color: #6b7280; }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 0.875rem 1.5rem;
+            background: #7c3aed;
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            margin-top: 1.5rem;
         }
+        .btn-primary:hover { background: #6d28d9; }
 
-        .date-icon, .time-icon {
-            font-size: 1.25rem;
-        }
-
-        .success-actions {
+        .application-info {
             display: flex;
             gap: 1rem;
             justify-content: center;
             flex-wrap: wrap;
+            margin-bottom: 1.5rem;
         }
 
-        /* Week Navigation */
-        .week-nav {
+        .info-badge {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 0.5rem;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            font-weight: 500;
+            color: #374151;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .badge-icon { font-size: 1.25rem; }
+
+        .calendar-wrapper {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             margin-bottom: 1.5rem;
-            padding: 1rem 1.25rem;
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--border-light);
-            gap: 1rem;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-nav h3 {
+            margin: 0;
+            font-size: 1.125rem;
+            color: #1f2937;
         }
 
         .nav-btn {
-            padding: 0.625rem 1rem;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-light);
-            background: var(--bg-secondary);
-            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
+            font-size: 1.25rem;
+            transition: background 0.2s;
+        }
+        .nav-btn:hover { background: #e5e7eb; }
+
+        .weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            padding: 8px 0;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
             font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            transition: all 0.2s;
         }
 
-        .nav-btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #6366f1, #a855f7);
-            color: white;
-            border-color: transparent;
+        .day-cell:hover:not(:disabled):not(.selected) { background: #f3e8ff; }
+        .day-cell.other-month { color: #d1d5db; }
+        .day-cell.today { border: 2px solid #7c3aed; }
+        .day-cell.selected { background: #7c3aed !important; color: white !important; }
+        .day-cell.past { 
+            color: #9ca3af; 
+            text-decoration: line-through; 
+            cursor: not-allowed; 
+            background: #f9fafb;
         }
-
-        .nav-btn:disabled {
-            opacity: 0.4;
+        .day-cell.weekend { 
+            color: #ef4444; 
+            background: #fef2f2; 
             cursor: not-allowed;
         }
+        .day-cell:disabled:not(.past):not(.weekend) { cursor: not-allowed; opacity: 0.5; }
 
-        .week-label {
-            font-weight: 600;
-            font-size: 1rem;
-            color: var(--text-primary);
-        }
-
-        /* Calendar Grid */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 1rem;
+        .slots-section {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             margin-bottom: 1.5rem;
         }
 
-        .day-column {
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--border-light);
-            overflow: hidden;
-            animation: fadeInUp 0.5s ease backwards;
+        .slots-section h3 {
+            margin: 0 0 1rem;
+            font-size: 1rem;
+            color: #1f2937;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .day-header {
-            padding: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
-            color: white;
-        }
-
-        .day-name {
-            display: block;
-            font-weight: 600;
-            font-size: 0.9375rem;
-        }
-
-        .day-date {
-            font-size: 0.8125rem;
-            opacity: 0.9;
-        }
-
-        .slots-list {
-            padding: 0.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            max-height: 320px;
-            overflow-y: auto;
-            min-height: 150px;
-        }
-
-        .slot-btn {
+        .slots-loading {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1rem;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-light);
-            background: var(--bg-secondary);
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .slot-check {
-            opacity: 0;
-            color: white;
-            transition: opacity 0.2s;
-        }
-
-        .slot-btn:hover {
-            border-color: var(--accent);
-            background: rgba(99, 102, 241, 0.08);
-        }
-
-        .slot-btn.selected {
-            background: linear-gradient(135deg, #10b981, #34d399);
-            color: white;
-            border-color: transparent;
-        }
-
-        .slot-btn.selected .slot-check {
-            opacity: 1;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 2rem;
+            color: #6b7280;
         }
 
         .no-slots {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+        .no-slots-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+        .no-slots p { margin: 0; }
+        .no-slots small { color: #9ca3af; }
+
+        .slots-grid {
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .slot-pill {
+            padding: 0.75rem 1.25rem;
+            background: #f3f4f6;
+            border: 2px solid transparent;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .slot-pill:hover:not(.selected) { background: #e5e7eb; border-color: #7c3aed; }
+        .slot-pill.selected { 
+            background: #7c3aed !important; 
+            color: white !important; 
+            border-color: #7c3aed !important; 
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+
+        .confirm-section {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .confirm-summary {
+            margin-bottom: 1rem;
+        }
+        .confirm-summary p { margin: 0.25rem 0; color: #374151; }
+
+        .btn-confirm {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            padding: 2rem 1rem;
-            color: var(--text-muted);
-            font-size: 0.8125rem;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+        .btn-confirm:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); }
+        .btn-confirm:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        .no-slots-icon {
-            font-size: 1.5rem;
-        }
-
-        /* Confirmation Bar */
-        .confirmation-bar {
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 1.25rem 1.5rem;
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            border: 2px solid #10b981;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
-            animation: fadeInUp 0.3s ease;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
         }
 
-        .selected-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: modalIn 0.3s ease;
         }
 
-        .selected-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        .selected-datetime {
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-
-        .btn-confirm {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border: none;
-            padding: 0.875rem 1.75rem;
-            border-radius: var(--radius-full);
-            font-weight: 600;
-            font-size: 0.9375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-confirm:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-confirm:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .btn-spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        /* Buttons */
-        .btn-primary {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
-            color: white;
-            padding: 0.875rem 1.75rem;
-            border-radius: var(--radius-full);
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            padding: 0.875rem 1.75rem;
-            border-radius: var(--radius-full);
-            font-weight: 600;
-            text-decoration: none;
-            border: 1px solid var(--border-light);
-            transition: all 0.2s;
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--accent);
-            background: rgba(99, 102, 241, 0.08);
-        }
-
-        /* Responsive */
-        @media (max-width: 900px) {
-            .calendar-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
+        .success-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .modal-content h2 { color: #1f2937; margin: 0 0 0.5rem; }
+        .modal-content p { color: #6b7280; margin: 0.5rem 0; }
+        .booking-details { font-size: 1.125rem; color: #1f2937; }
+        .company-info { color: #7c3aed; }
+        .modal-content small { display: block; color: #9ca3af; margin-top: 1rem; }
 
         @media (max-width: 600px) {
-            .booking-header h1 {
-                font-size: 1.75rem;
-            }
-
-            .booking-content {
-                padding: 0 1rem 2rem;
-            }
-
-            .calendar-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 0.75rem;
-            }
-
-            .week-nav {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .nav-btn {
-                width: 100%;
-            }
-
-            .confirmation-bar {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .selected-info {
-                align-items: center;
-            }
-
-            .success-actions {
-                flex-direction: column;
-            }
-
-            .btn-primary, .btn-secondary {
-                width: 100%;
-                justify-content: center;
-            }
+            .booking-header { padding: 1rem; }
+            h1 { font-size: 1.5rem; }
+            .booking-content { padding: 0 1rem; }
+            .calendar-wrapper, .slots-section, .confirm-section { padding: 1rem; }
+            .application-info { flex-direction: column; align-items: center; }
         }
     `]
 })
 export class BookInterviewComponent implements OnInit {
     private route = inject(ActivatedRoute);
-    private interviewService = inject(InterviewService);
-    private authService = inject(AuthService);
+    private router = inject(Router);
+    private applicationService = inject(ApplicationService);
+    private scheduleService = inject(ScheduleService);
 
     loading = signal(true);
     error = signal(false);
+    errorTitle = signal('Une erreur est survenue');
     errorMessage = signal('');
-    booking = signal(false);
-    confirmed = signal(false);
 
     applicationId = signal(0);
     companyId = signal(0);
-    rescheduleId = signal<number | null>(null);
-    slots = signal<AvailableSlot[]>([]);
-    selectedSlot = signal<AvailableSlot | null>(null);
-    weekOffset = signal(0);
+    jobTitle = signal('');
+    companyName = signal('');
 
-    weekDays = signal<{ name: string, date: Date, dateLabel: string, slots: AvailableSlot[] }[]>([]);
+    // Calendar state
+    currentMonth = signal(new Date());
+    calendarDays = signal<CalendarDay[]>([]);
+    selectedDate = signal<string | null>(null);
+    weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-    ngOnInit() {
-        this.applicationId.set(Number(this.route.snapshot.paramMap.get('applicationId')));
-        this.companyId.set(Number(this.route.snapshot.queryParamMap.get('companyId')));
+    // Slots state
+    loadingSlots = signal(false);
+    availableSlots = signal<Slot[]>([]);
+    selectedSlot = signal<string | null>(null);
 
-        // Check for reschedule mode
-        const rescheduleIdParam = this.route.snapshot.queryParamMap.get('rescheduleId');
-        if (rescheduleIdParam) {
-            this.rescheduleId.set(Number(rescheduleIdParam));
-        }
+    // Booking state
+    booking = signal(false);
+    showSuccessModal = signal(false);
 
-        if (!this.applicationId() || !this.companyId()) {
-            this.error.set(true);
-            this.errorMessage.set('Paramètres manquants');
-            this.loading.set(false);
-            return;
-        }
+    private isBrowser: boolean;
 
-        this.loadSlots();
+    constructor(@Inject(PLATFORM_ID) platformId: Object) {
+        this.isBrowser = isPlatformBrowser(platformId);
     }
 
-    loadSlots() {
-        this.loading.set(true);
-        const startDate = this.getWeekStartDate();
+    ngOnInit() {
+        this.route.params.subscribe(params => {
+            this.applicationId.set(+params['applicationId']);
+            this.loadApplication();
+        });
+    }
 
-        this.interviewService.getAvailableSlots(this.companyId(), startDate, 5).subscribe({
-            next: (slots) => {
-                this.slots.set(slots);
-                this.buildWeekDays(startDate, slots);
+    loadApplication() {
+        this.applicationService.getApplication(this.applicationId()).subscribe({
+            next: (app) => {
+                this.jobTitle.set(app.jobTitle);
+                this.companyName.set(app.companyName || 'Entreprise');
+                this.companyId.set(app.companyId);
                 this.loading.set(false);
+                this.generateCalendar();
             },
             error: () => {
                 this.error.set(true);
-                this.errorMessage.set('Impossible de charger les créneaux');
+                this.errorTitle.set('Candidature introuvable');
+                this.errorMessage.set('Impossible de charger les détails de la candidature.');
                 this.loading.set(false);
             }
         });
     }
 
-    getWeekStartDate(): Date {
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const daysToMonday = dayOfWeek === 0 ? 1 : (dayOfWeek === 1 ? 0 : 8 - dayOfWeek);
-        const monday = new Date(now);
-        monday.setDate(now.getDate() + daysToMonday + (this.weekOffset() * 7));
-        monday.setHours(0, 0, 0, 0);
-        return monday;
-    }
+    generateCalendar() {
+        const year = this.currentMonth().getFullYear();
+        const month = this.currentMonth().getMonth();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-    buildWeekDays(startDate: Date, slots: AvailableSlot[]) {
-        const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
-        const days = [];
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
 
-        for (let i = 0; i < 5; i++) {
-            const date = new Date(startDate);
-            date.setDate(startDate.getDate() + i);
+        // Adjust for Monday start (0 = Sunday in JS, we want Monday = 0)
+        let startOffset = firstDay.getDay() - 1;
+        if (startOffset < 0) startOffset = 6;
 
-            const daySlots = slots.filter(slot => {
-                const slotDate = new Date(slot.startTime);
-                return slotDate.toDateString() === date.toDateString();
-            });
+        const days: CalendarDay[] = [];
 
-            days.push({
-                name: dayNames[i],
-                date: date,
-                dateLabel: date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
-                slots: daySlots
-            });
+        // Previous month days
+        const prevMonth = new Date(year, month, 0);
+        for (let i = startOffset - 1; i >= 0; i--) {
+            const date = new Date(year, month - 1, prevMonth.getDate() - i);
+            days.push(this.createCalendarDay(date, false, today));
         }
 
-        this.weekDays.set(days);
-    }
-
-    getWeekLabel(): string {
-        const start = this.getWeekStartDate();
-        const end = new Date(start);
-        end.setDate(start.getDate() + 4);
-
-        return `${start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-    }
-
-    previousWeek() {
-        if (this.weekOffset() > 0) {
-            this.weekOffset.update(v => v - 1);
-            this.loadSlots();
+        // Current month days
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+            const date = new Date(year, month, d);
+            days.push(this.createCalendarDay(date, true, today));
         }
-    }
 
-    nextWeek() {
-        this.weekOffset.update(v => v + 1);
-        this.loadSlots();
-    }
-
-    selectSlot(slot: AvailableSlot) {
-        this.selectedSlot.set(slot);
-    }
-
-    isSelected(slot: AvailableSlot): boolean {
-        return this.selectedSlot()?.startTime === slot.startTime;
-    }
-
-    confirmBooking() {
-        const slot = this.selectedSlot();
-        if (!slot) return;
-
-        this.booking.set(true);
-
-        // Check if this is a reschedule or new booking
-        if (this.rescheduleId()) {
-            this.interviewService.rescheduleInterview(this.rescheduleId()!, {
-                newScheduledAt: new Date(slot.startTime),
-                reason: 'Replaniﬁé par l\'utilisateur'
-            }).subscribe({
-                next: () => {
-                    this.confirmed.set(true);
-                    this.booking.set(false);
-                },
-                error: (err) => {
-                    this.error.set(true);
-                    this.errorMessage.set(err.error?.message || 'Erreur lors de la replanification');
-                    this.booking.set(false);
-                }
-            });
-        } else {
-            this.interviewService.scheduleInterview({
-                applicationId: this.applicationId(),
-                scheduledAt: new Date(slot.startTime)
-            }).subscribe({
-                next: () => {
-                    this.confirmed.set(true);
-                    this.booking.set(false);
-                },
-                error: (err) => {
-                    this.error.set(true);
-                    this.errorMessage.set(err.error?.message || 'Erreur lors de la confirmation');
-                    this.booking.set(false);
-                }
-            });
+        // Only add enough next month days to complete the week (max 7 days, not full row)
+        const remainder = days.length % 7;
+        if (remainder > 0) {
+            const needed = 7 - remainder;
+            for (let d = 1; d <= needed; d++) {
+                const date = new Date(year, month + 1, d);
+                days.push(this.createCalendarDay(date, false, today));
+            }
         }
+
+        this.calendarDays.set(days);
     }
 
-    formatDate(slot: AvailableSlot): string {
-        return new Date(slot.startTime).toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
+    private createCalendarDay(date: Date, currentMonth: boolean, today: Date): CalendarDay {
+        const dayOfWeek = date.getDay();
+        return {
+            date: this.formatDate(date),
+            dayNumber: date.getDate(),
+            currentMonth,
+            isToday: date.getTime() === today.getTime(),
+            isPast: date < today,
+            isWeekend: dayOfWeek === 0 || dayOfWeek === 6
+        };
+    }
+
+    private formatDate(date: Date): string {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    currentMonthYear(): string {
+        const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        const m = this.currentMonth();
+        return `${months[m.getMonth()]} ${m.getFullYear()}`;
+    }
+
+    previousMonth() {
+        const m = this.currentMonth();
+        this.currentMonth.set(new Date(m.getFullYear(), m.getMonth() - 1, 1));
+        this.generateCalendar();
+    }
+
+    nextMonth() {
+        const m = this.currentMonth();
+        this.currentMonth.set(new Date(m.getFullYear(), m.getMonth() + 1, 1));
+        this.generateCalendar();
+    }
+
+    selectDate(date: string) {
+        this.selectedDate.set(date);
+        this.selectedSlot.set(null);
+        this.loadSlots(date);
+    }
+
+    loadSlots(date: string) {
+        this.loadingSlots.set(true);
+        this.scheduleService.getAvailableSlots(this.companyId(), date).subscribe({
+            next: (slots) => {
+                this.availableSlots.set(slots);
+                this.loadingSlots.set(false);
+            },
+            error: () => {
+                this.availableSlots.set([]);
+                this.loadingSlots.set(false);
+            }
         });
     }
 
-    formatTime(date: Date | string): string {
-        return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    selectSlot(startTime: string) {
+        this.selectedSlot.set(startTime);
     }
+
+    formatSelectedDate(): string {
+        if (!this.selectedDate()) return '';
+        const date = new Date(this.selectedDate()!);
+        return date.toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+        });
+    }
+
+    confirmBooking() {
+        if (!this.selectedDate() || !this.selectedSlot()) return;
+
+        this.booking.set(true);
+        this.scheduleService.bookSlot(
+            this.applicationId(),
+            this.selectedDate()!,
+            this.selectedSlot()!
+        ).subscribe({
+            next: (result) => {
+                this.booking.set(false);
+                this.showSuccessModal.set(true);
+            },
+            error: (err) => {
+                this.booking.set(false);
+                alert(err.error?.message || 'Erreur lors de la réservation');
+                // Reload slots in case of conflict
+                this.loadSlots(this.selectedDate()!);
+            }
+        });
+    }
+
+    closeSuccessModal() {
+        this.showSuccessModal.set(false);
+    }
+
+    goToApplications() {
+        this.router.navigate(['/candidate/applications']);
+    }
+}
+
+interface CalendarDay {
+    date: string;
+    dayNumber: number;
+    currentMonth: boolean;
+    isToday: boolean;
+    isPast: boolean;
+    isWeekend: boolean;
 }

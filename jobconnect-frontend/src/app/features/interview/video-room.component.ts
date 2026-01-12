@@ -295,7 +295,17 @@ export class VideoRoomComponent implements OnInit {
         const url = this.meetingUrl();
         if (url) {
             window.open(url, '_blank');
-            this.meetingOpened.set(true);
+
+            // For candidates: redirect back to interviews list after opening meeting
+            // For companies: stay on this page to be able to end the interview
+            if (!this.isCompany()) {
+                // Small delay to ensure the new tab opens before redirecting
+                setTimeout(() => {
+                    this.router.navigate(['/interviews']);
+                }, 500);
+            } else {
+                this.meetingOpened.set(true);
+            }
         }
     }
 

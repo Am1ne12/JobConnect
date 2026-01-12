@@ -107,6 +107,7 @@ export interface Company {
     location?: string;
     logoUrl?: string;
     employeeCount?: number;
+    calendarLink?: string; // Cal.com link (e.g., "username/event-type")
 }
 
 // Job types
@@ -289,6 +290,15 @@ export interface UpdateAvailabilityRequest {
 export interface AvailableSlot {
     startTime: Date;
     endTime: Date;
+}
+
+// Date-specific availability slot (from CompanyAvailabilitySlot model)
+export interface CalendarSlot {
+    id: number;
+    slotDate: string;  // DateOnly as ISO string "2026-01-15"
+    startTime: string; // TimeOnly as "09:00:00"
+    endTime: string;   // TimeOnly as "10:30:00"
+    isBooked: boolean;
 }
 
 // Interview Message types

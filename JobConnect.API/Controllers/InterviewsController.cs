@@ -6,6 +6,7 @@ using JobConnect.API.Data;
 using JobConnect.API.DTOs;
 using JobConnect.API.Models;
 using JobConnect.API.Services;
+using JobConnect.API.Hubs;
 
 namespace JobConnect.API.Controllers;
 
@@ -17,15 +18,18 @@ public class InterviewsController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IInterviewSchedulingService _schedulingService;
     private readonly IHmsService _hmsService;
+    private readonly INotificationHubService _notificationHub;
 
     public InterviewsController(
         ApplicationDbContext context, 
         IInterviewSchedulingService schedulingService,
-        IHmsService hmsService)
+        IHmsService hmsService,
+        INotificationHubService notificationHub)
     {
         _context = context;
         _schedulingService = schedulingService;
         _hmsService = hmsService;
+        _notificationHub = notificationHub;
     }
 
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -148,6 +152,35 @@ public class InterviewsController : ControllerBase
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
 
+            // Send real-time notification via SignalR
+            await _notificationHub.SendNotificationAsync(
+                interview.Company.UserId,
+                new NotificationMessage(
+                    notification.Id,
+                    notification.Type,
+                    notification.Title,
+                    notification.Message,
+                    notification.Link,
+                    notification.CreatedAt
+                )
+            );
+
+            // Also send interview update
+            await _notificationHub.SendInterviewUpdateAsync(
+                interview.Company.UserId,
+                new InterviewUpdateMessage(
+                    "scheduled",
+                    interview.Id,
+                    interview.ApplicationId,
+                    interview.Application.JobPosting.Title,
+                    interview.ScheduledAt,
+                    $"Nouvel entretien planifié le {scheduledDate}"
+                )
+            );
+
+            // Notify all clients that this slot is now booked (remove from other candidates' view)
+            await _notificationHub.SendSlotBookedAsync(interview.CompanyId, interview.ScheduledAt, interview.EndsAt);
+
             return CreatedAtAction(nameof(GetInterview), new { id = interview.Id }, MapToDto(interview, userId));
         }
         catch (InvalidOperationException ex)
@@ -216,6 +249,29 @@ public class InterviewsController : ControllerBase
         interview.Status = InterviewStatus.Completed;
         interview.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        // Notify candidate via SignalR that interview is completed
+        var candidateUserId = interview.CandidateProfile?.UserId ?? 
+            await _context.CandidateProfiles
+                .Where(c => c.Id == interview.CandidateProfileId)
+                .Select(c => c.UserId)
+                .FirstOrDefaultAsync();
+        
+        if (candidateUserId > 0)
+        {
+            await _notificationHub.SendInterviewUpdateAsync(
+                candidateUserId,
+                new InterviewUpdateMessage(
+                    "completed",
+                    interview.Id,
+                    interview.ApplicationId,
+                    interview.Application?.JobPosting?.Title,
+                    interview.ScheduledAt,
+                    "L'entretien est terminé"
+                )
+            );
+            Console.WriteLine($"SignalR: Notified candidate {candidateUserId} that interview {interview.Id} is completed");
+        }
 
         // Disable the 100ms room
         try 
@@ -294,6 +350,32 @@ public class InterviewsController : ControllerBase
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
 
+            // Send real-time notification via SignalR
+            await _notificationHub.SendNotificationAsync(
+                notifyUserId,
+                new NotificationMessage(
+                    notification.Id,
+                    notification.Type,
+                    notification.Title,
+                    notification.Message,
+                    notification.Link,
+                    notification.CreatedAt
+                )
+            );
+
+            // Also send interview cancellation update
+            await _notificationHub.SendInterviewUpdateAsync(
+                notifyUserId,
+                new InterviewUpdateMessage(
+                    "cancelled",
+                    id,
+                    null,
+                    jobTitle,
+                    null,
+                    $"Entretien annulé par {cancelledBy}"
+                )
+            );
+
             // Return success with cancellation info
             return Ok(new { 
                 message = "Entretien annulé avec succès",
@@ -329,7 +411,7 @@ public class InterviewsController : ControllerBase
         if (!await HasAccessToInterview(interview))
             return Forbid();
 
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         var waitingRoomOpens = interview.ScheduledAt.AddMinutes(-5);
         var secondsUntilStart = (int)(waitingRoomOpens - now).TotalSeconds;
 
@@ -437,6 +519,32 @@ public class InterviewsController : ControllerBase
             if (role == "Company" && interview.CompanyJoinedAt == null)
             {
                 interview.CompanyJoinedAt = DateTime.UtcNow;
+            }
+            
+            // Always notify candidate via SignalR when company joins
+            if (role == "Company")
+            {
+                var candidateUserId = await _context.CandidateProfiles
+                    .Where(c => c.Id == interview.CandidateProfileId)
+                    .Select(c => c.UserId)
+                    .FirstOrDefaultAsync();
+                
+                Console.WriteLine($"SignalR DEBUG: Company joined, notifying candidate userId={candidateUserId}");
+                
+                if (candidateUserId > 0)
+                {
+                    await _notificationHub.SendInterviewUpdateAsync(
+                        candidateUserId,
+                        new InterviewUpdateMessage(
+                            "started",
+                            interview.Id,
+                            interview.ApplicationId,
+                            null, // JobTitle
+                            interview.ScheduledAt,
+                            "L'entreprise a rejoint l'entretien"
+                        )
+                    );
+                }
             }
             
             if (now >= interview.ScheduledAt && interview.Status == InterviewStatus.Scheduled)

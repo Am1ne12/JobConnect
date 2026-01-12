@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, inject } from '@angular/core';
+import { Component, signal, OnInit, inject, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
@@ -44,7 +44,7 @@ import { NotificationService } from './core/services/notification.service';
             @if (authService.isAuthenticated()) {
               <!-- Notifications Bell -->
               <div class="notification-wrapper">
-                <button class="btn-icon notification-btn" (click)="toggleNotifications()" title="Notifications">
+                <button class="btn-icon notification-btn" (click)="toggleNotifications($event)" title="Notifications">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -146,6 +146,21 @@ import { NotificationService } from './core/services/notification.service';
             <span class="hamburger-line"></span>
             <span class="hamburger-line"></span>
           </button>
+
+          <!-- Mobile Notification Bell (right of hamburger) -->
+          @if (authService.isAuthenticated()) {
+            <div class="mobile-notification-wrapper">
+              <button class="btn-icon notification-btn" (click)="toggleNotifications($event)" title="Notifications">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                @if (notificationService.unreadCount() > 0) {
+                  <span class="notification-badge">{{ notificationService.unreadCount() }}</span>
+                }
+              </button>
+            </div>
+          }
         </div>
       </nav>
 
@@ -991,6 +1006,11 @@ import { NotificationService } from './core/services/notification.service';
         display: none;
       }
 
+      .mobile-notification-wrapper {
+        display: flex;
+        margin-right: 8px;
+      }
+
       .mobile-menu-btn {
         display: flex;
       }
@@ -1009,6 +1029,21 @@ import { NotificationService } from './core/services/notification.service';
 
       .copyright-bar {
         padding: 1rem;
+      }
+
+      .notification-dropdown {
+        position: fixed;
+        top: 70px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        max-height: 70vh;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .mobile-notification-wrapper {
+        display: none;
       }
     }
 
@@ -1184,7 +1219,24 @@ export class App implements OnInit {
     this.authService.logout();
   }
 
-  toggleNotifications() {
+  private elementRef = inject(ElementRef);
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    // Close notification dropdown if clicking outside
+    if (this.notificationsOpen()) {
+      const target = event.target as HTMLElement;
+      const isInsideDropdown = target.closest('.notification-dropdown') || target.closest('.notification-btn');
+      if (!isInsideDropdown) {
+        this.notificationsOpen.set(false);
+      }
+    }
+  }
+
+  toggleNotifications(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     const willOpen = !this.notificationsOpen();
     this.notificationsOpen.set(willOpen);
 
@@ -1200,14 +1252,48 @@ export class App implements OnInit {
     this.notificationService.markAsRead(notif.id);
     this.notificationsOpen.set(false);
 
-    // Navigate based on notification type
+    // Navigate based on notification type with scroll support
     if (notif.link) {
-      this.router.navigateByUrl(notif.link);
+      // Add fragment for scrolling to specific item
+      let url = notif.link;
+
+      // For application status updates, scroll to the application
+      if (notif.type === 'application_status' && notif.link.includes('/candidate/applications')) {
+        // Extract application ID from link if present
+        const match = notif.link.match(/application[_-]?(\d+)/i);
+        if (match) {
+          url = `/candidate/applications`;
+          this.router.navigateByUrl(url).then(() => {
+            setTimeout(() => {
+              const element = document.getElementById(`application-${match[1]}`);
+              if (element) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+          });
+          return;
+        }
+      }
+
+      // For interview notifications
+      if ((notif.type === 'interview_scheduled' || notif.type === 'interview_cancelled') && notif.link.includes('/interviews')) {
+        this.router.navigateByUrl('/interviews').then(() => {
+          setTimeout(() => {
+            const match = notif.link.match(/interview[_-]?(\d+)/i);
+            if (match) {
+              const element = document.getElementById(`interview-${match[1]}`);
+              if (element) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 300);
+        });
+        return;
+      }
+
+      this.router.navigateByUrl(url);
     }
   }
 
   clearAllNotifications() {
     this.notificationService.deleteAllNotifications();
+    this.notificationsOpen.set(false);
   }
 
   getTimeAgo(date: Date): string {

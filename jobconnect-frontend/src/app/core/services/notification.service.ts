@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from './config.service';
+import { SignalRService, NotificationMessage } from './signalr.service';
 
 export interface Notification {
     id: number;
@@ -25,6 +26,7 @@ export interface AppNotification {
 export class NotificationService {
     private http = inject(HttpClient);
     private configService = inject(ConfigService);
+    private signalR = inject(SignalRService);
 
     private get API_URL() { return `${this.configService.apiUrl}/notifications`; }
 
@@ -39,6 +41,28 @@ export class NotificationService {
     unreadCount = computed(() =>
         this.appNotifications().filter(n => !n.isRead).length
     );
+
+    constructor() {
+        // Subscribe to real-time notifications from SignalR
+        this.signalR.onNotification((notification: NotificationMessage) => {
+            console.log('Real-time notification received:', notification);
+
+            // Add to app notifications
+            const appNotif: AppNotification = {
+                id: notification.id,
+                type: notification.type,
+                title: notification.title,
+                message: notification.message,
+                link: notification.link || undefined,
+                isRead: false,
+                createdAt: new Date(notification.createdAt)
+            };
+            this.appNotifications.update(n => [appNotif, ...n]);
+
+            // Also show a toast notification
+            this.show(notification.message, 'info', 6000);
+        });
+    }
 
     // Load notifications from backend
     loadNotifications() {

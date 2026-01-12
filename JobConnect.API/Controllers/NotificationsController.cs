@@ -126,4 +126,21 @@ public class NotificationsController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Delete all notifications for the current user
+    /// </summary>
+    [HttpDelete]
+    public async Task<ActionResult> DeleteAllNotifications()
+    {
+        var userId = GetUserId();
+        var notifications = await _context.Notifications
+            .Where(n => n.UserId == userId)
+            .ToListAsync();
+
+        _context.Notifications.RemoveRange(notifications);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }

@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using JobConnect.API.Data;
 using JobConnect.API.Services;
+using JobConnect.API.Hubs;
+
+// Disable Npgsql UTC timestamp conversion - use local times
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +56,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.Converters.Add(new JobConnect.API.Converters.LocalDateTimeConverter());
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
@@ -66,6 +71,10 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMatchingScoreService, MatchingScoreService>();
 builder.Services.AddScoped<IInterviewSchedulingService, InterviewSchedulingService>();
 builder.Services.AddSingleton<IHmsService, HmsService>();
+builder.Services.AddSingleton<INotificationHubService, NotificationHubService>();
+
+// SignalR
+builder.Services.AddSignalR();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
@@ -81,6 +90,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "JobConnect",
             ValidAudience = builder.Configuration["JwtSettings:Audience"] ?? "JobConnectUsers",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+        };
+        // Allow JWT token from query string for SignalR WebSocket
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -116,6 +139,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// SignalR Hub endpoint
+app.MapHub<NotificationHub>("/hubs/notifications");
+
 // Health check endpoint
 app.MapGet("/api/health", () => new { status = "healthy", timestamp = DateTime.UtcNow });
 
@@ -127,6 +153,17 @@ using (var scope = app.Services.CreateScope())
     // EnsureCreated checks if the database exists, and if not, creates it along with all tables
     // If the database already exists with tables, it does nothing (no error)
     db.Database.EnsureCreated();
+    
+    // Fix timestamp columns to prevent timezone conversion (run only once, safe to repeat)
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            ALTER TABLE ""Interviews"" 
+            ALTER COLUMN ""ScheduledAt"" TYPE timestamp without time zone USING ""ScheduledAt"" AT TIME ZONE 'UTC',
+            ALTER COLUMN ""EndsAt"" TYPE timestamp without time zone USING ""EndsAt"" AT TIME ZONE 'UTC'
+        ");
+    }
+    catch { /* Column type might already be correct */ }
     
     try
     {
@@ -157,6 +194,63 @@ using (var scope = app.Services.CreateScope())
             var forceSeed = builder.Configuration["FORCE_SEED"]?.ToLower() == "true";
             var authServiceForSeeder = scope.ServiceProvider.GetRequiredService<IAuthService>();
             DatabaseSeeder.SeedData(db, authServiceForSeeder, forceSeed);
+        }
+        
+        // Create test interview for video testing (Marie du Pont with TechVision Labs)
+        try
+        {
+            var marieProfile = db.CandidateProfiles.FirstOrDefault(c => c.FirstName == "Marie");
+            var techVision = db.Companies.FirstOrDefault(c => c.Name.Contains("TechVision"));
+            var angularJob = db.JobPostings.FirstOrDefault(j => j.Title.Contains("Angular") && j.CompanyId == techVision!.Id);
+            
+            if (marieProfile != null && techVision != null && angularJob != null)
+            {
+                // Delete all existing scheduled interviews for this combo
+                var oldInterviews = db.Interviews
+                    .Where(i => i.CandidateProfileId == marieProfile.Id && 
+                                i.CompanyId == techVision.Id)
+                    .ToList();
+                db.Interviews.RemoveRange(oldInterviews);
+                db.SaveChanges();
+                
+                // Find or create application
+                var application = db.Applications.FirstOrDefault(a => 
+                    a.CandidateProfileId == marieProfile.Id && a.JobPostingId == angularJob.Id);
+                
+                if (application == null)
+                {
+                    application = new JobConnect.API.Models.Application
+                    {
+                        CandidateProfileId = marieProfile.Id,
+                        JobPostingId = angularJob.Id,
+                        Status = JobConnect.API.Models.ApplicationStatus.Interview,
+                        CoverLetter = "Test application for video interview"
+                    };
+                    db.Applications.Add(application);
+                    db.SaveChanges();
+                }
+                
+                // Create fresh interview starting NOW
+                var interview = new JobConnect.API.Models.Interview
+                {
+                    ApplicationId = application.Id,
+                    CompanyId = techVision.Id,
+                    CandidateProfileId = marieProfile.Id,
+                    ScheduledAt = DateTime.Now.AddMinutes(-5), // Started 5 min ago (can join now)
+                    EndsAt = DateTime.Now.AddMinutes(55), // 1h total
+                    Status = JobConnect.API.Models.InterviewStatus.Scheduled,
+                    JitsiRoomId = $"test-visio-{DateTime.Now:HHmmss}",
+                    CompanyJoinedAt = null, // Fresh - not joined yet
+                    CreatedAt = DateTime.Now
+                };
+                db.Interviews.Add(interview);
+                db.SaveChanges();
+                Console.WriteLine($"✅ Fresh interview created: Marie du Pont with TechVision Labs at {interview.ScheduledAt:HH:mm}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Note: Interview cleanup skipped - {ex.Message}");
         }
     }
     catch (Exception ex)

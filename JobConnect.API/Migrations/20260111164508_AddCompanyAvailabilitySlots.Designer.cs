@@ -3,6 +3,7 @@ using System;
 using JobConnect.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JobConnect.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260111164508_AddCompanyAvailabilitySlots")]
+    partial class AddCompanyAvailabilitySlots
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,7 +34,7 @@ namespace JobConnect.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("AppliedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("CandidateProfileId")
                         .HasColumnType("integer");
@@ -56,7 +59,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -80,7 +83,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("jsonb");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EducationJson")
                         .HasColumnType("jsonb");
@@ -109,7 +112,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -151,11 +154,8 @@ namespace JobConnect.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CalendarLink")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -177,7 +177,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -205,7 +205,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("DayOfWeek")
                         .HasColumnType("integer");
@@ -220,7 +220,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("time without time zone");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -229,7 +229,7 @@ namespace JobConnect.API.Migrations
                     b.ToTable("CompanyAvailabilities");
                 });
 
-            modelBuilder.Entity("JobConnect.API.Models.CompanyUnavailability", b =>
+            modelBuilder.Entity("JobConnect.API.Models.CompanyAvailabilitySlot", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -240,20 +240,33 @@ namespace JobConnect.API.Migrations
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Reason")
-                        .HasColumnType("text");
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time without time zone");
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<int?>("InterviewId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsBooked")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly>("SlotDate")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId", "StartTime");
+                    b.HasIndex("InterviewId");
 
-                    b.ToTable("CompanyUnavailabilities");
+                    b.HasIndex("SlotDate");
+
+                    b.HasIndex("CompanyId", "SlotDate");
+
+                    b.ToTable("CompanyAvailabilitySlots");
                 });
 
             modelBuilder.Entity("JobConnect.API.Models.Interview", b =>
@@ -277,13 +290,13 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("CompanyJoinedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("EndsAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("JitsiRoomId")
                         .IsRequired()
@@ -293,14 +306,14 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("ScheduledAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -344,7 +357,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -367,13 +380,13 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -389,7 +402,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("PublishedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Requirements")
                         .HasColumnType("text");
@@ -416,7 +429,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -455,7 +468,7 @@ namespace JobConnect.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean");
@@ -609,7 +622,7 @@ namespace JobConnect.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -630,7 +643,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -711,7 +724,7 @@ namespace JobConnect.API.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("JobConnect.API.Models.CompanyUnavailability", b =>
+            modelBuilder.Entity("JobConnect.API.Models.CompanyAvailabilitySlot", b =>
                 {
                     b.HasOne("JobConnect.API.Models.Company", "Company")
                         .WithMany()
@@ -719,7 +732,14 @@ namespace JobConnect.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("JobConnect.API.Models.Interview", "Interview")
+                        .WithMany()
+                        .HasForeignKey("InterviewId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Company");
+
+                    b.Navigation("Interview");
                 });
 
             modelBuilder.Entity("JobConnect.API.Models.Interview", b =>

@@ -27,6 +27,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<JobSkill> JobSkills => Set<JobSkill>();
     public DbSet<Interview> Interviews => Set<Interview>();
     public DbSet<CompanyAvailability> CompanyAvailabilities => Set<CompanyAvailability>();
+    public DbSet<CompanyUnavailability> CompanyUnavailabilities => Set<CompanyUnavailability>();
     public DbSet<InterviewMessage> InterviewMessages => Set<InterviewMessage>();
     public DbSet<Notification> Notifications => Set<Notification>();
 
@@ -121,6 +122,10 @@ public class ApplicationDbContext : DbContext
         {
             entity.Property(e => e.Status).HasConversion<string>();
             
+            // Force timestamp without time zone to prevent UTC conversion
+            entity.Property(e => e.ScheduledAt).HasColumnType("timestamp without time zone");
+            entity.Property(e => e.EndsAt).HasColumnType("timestamp without time zone");
+            
             entity.HasOne(i => i.Application)
                 .WithMany()
                 .HasForeignKey(i => i.ApplicationId)
@@ -178,6 +183,17 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
             
             entity.HasIndex(e => new { e.UserId, e.IsRead });
+        });
+
+        // CompanyUnavailability configuration
+        modelBuilder.Entity<CompanyUnavailability>(entity =>
+        {
+            entity.HasOne(u => u.Company)
+                .WithMany()
+                .HasForeignKey(u => u.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(e => new { e.CompanyId, e.StartTime });
         });
 
         // Seed some default skills

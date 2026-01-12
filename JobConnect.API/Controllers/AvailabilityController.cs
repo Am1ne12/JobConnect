@@ -6,6 +6,7 @@ using JobConnect.API.Data;
 using JobConnect.API.DTOs;
 using JobConnect.API.Models;
 using JobConnect.API.Services;
+using JobConnect.API.Hubs;
 
 namespace JobConnect.API.Controllers;
 
@@ -16,13 +17,16 @@ public class AvailabilityController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly IInterviewSchedulingService _schedulingService;
+    private readonly INotificationHubService _notificationHub;
 
     public AvailabilityController(
         ApplicationDbContext context,
-        IInterviewSchedulingService schedulingService)
+        IInterviewSchedulingService schedulingService,
+        INotificationHubService notificationHub)
     {
         _context = context;
         _schedulingService = schedulingService;
+        _notificationHub = notificationHub;
     }
 
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -120,6 +124,9 @@ public class AvailabilityController : ControllerBase
                 a.IsActive
             ))
             .ToListAsync();
+
+        // Broadcast availability update to all clients (candidates viewing the calendar)
+        await _notificationHub.SendAvailabilityUpdateAsync(company.Id);
 
         return Ok(availabilities);
     }

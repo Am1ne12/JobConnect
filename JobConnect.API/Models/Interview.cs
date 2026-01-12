@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace JobConnect.API.Models;
 
 public enum InterviewStatus
@@ -17,7 +19,9 @@ public class Interview
     public int CompanyId { get; set; }
     public int CandidateProfileId { get; set; }
     
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime ScheduledAt { get; set; }
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime EndsAt { get; set; }
     public InterviewStatus Status { get; set; } = InterviewStatus.Scheduled;
     public string JitsiRoomId { get; set; } = string.Empty;
