@@ -69,6 +69,16 @@
       <p align="center"><em>Admin panel for managing all job postings</em></p>
     </td>
   </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/images/calendar-compagnie.png" alt="Company Availability Calendar" width="100%">
+      <p align="center"><em>Company availability calendar for interview scheduling</em></p>
+    </td>
+    <td width="50%">
+      <img src="docs/images/calendar-condidat.png" alt="Candidate Interview Booking" width="100%">
+      <p align="center"><em>Candidate view for booking interview slots</em></p>
+    </td>
+  </tr>
 </table>
 
 ---

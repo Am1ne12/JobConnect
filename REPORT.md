@@ -962,6 +962,18 @@ Administrators can view and manage all user accounts on the platform, including 
 
 Administrators have full oversight of all job postings across the platform, with the ability to edit, publish, or remove any listing.
 
+### Company Availability Calendar
+
+![Company Availability Calendar](docs/images/calendar-compagnie.png)
+
+Companies can configure their weekly availability slots for interviews. Set specific time ranges for each day of the week when interviews can be scheduled.
+
+### Candidate Interview Booking
+
+![Candidate Interview Booking](docs/images/calendar-condidat.png)
+
+Candidates can view available interview slots from companies and book 90-minute interviews directly. The calendar shows real-time availability.
+
 ### Coolify Deployment
 
 ![Coolify Dashboard](docs/images/dashboard-coolify.png)
