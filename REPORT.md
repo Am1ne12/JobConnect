@@ -113,6 +113,8 @@ The JobConnect application is designed for:
 | ✅ Status Updates | Move candidates through hiring stages |
 | 📊 Dashboard | Overview of active jobs and incoming applications |
 
+<<<<<<< HEAD
+=======
 ### Administrator Features
 
 | Feature | Description |
@@ -122,6 +124,7 @@ The JobConnect application is designed for:
 | 📊 Platform Oversight | Complete visibility into all platform activity and data |
 | 🔧 Account Creation | Create new Candidate or Company accounts directly |
 
+>>>>>>> upstream/main
 ### Application Pipeline
 
 The application supports the following status stages:
@@ -145,7 +148,10 @@ The application supports the following status stages:
 - Matching algorithm calculates scores in under 100ms
 - Architecture supports horizontal scaling through Docker containerization
 - Stateless API design enables load balancing across multiple instances
+<<<<<<< HEAD
+=======
 - Pagination implemented on all list views (20 items per page) with "Load More" functionality
+>>>>>>> upstream/main
 
 ### Security Requirements
 
@@ -230,8 +236,12 @@ public class User
 public enum UserRole
 {
     Candidate,
+<<<<<<< HEAD
+    Company
+=======
     Company,
     Admin
+>>>>>>> upstream/main
 }
 ```
 
@@ -833,6 +843,8 @@ Companies can manage their job postings, view application statistics, and access
 
 Drag-and-drop candidate management through hiring stages. View candidate profiles, update statuses, and organize your recruitment pipeline.
 
+<<<<<<< HEAD
+=======
 ### Admin User Management
 
 ![Admin User Management](docs/images/manage-users.png)
@@ -845,6 +857,7 @@ Administrators can view and manage all user accounts on the platform, including 
 
 Administrators have full oversight of all job postings across the platform, with the ability to edit, publish, or remove any listing.
 
+>>>>>>> upstream/main
 ### Coolify Deployment
 
 ![Coolify Dashboard](docs/images/dashboard-coolify.png)

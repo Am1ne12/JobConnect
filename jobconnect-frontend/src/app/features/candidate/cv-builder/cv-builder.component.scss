@@ -732,6 +732,8 @@
   padding: 2rem;
   color: var(--text-primary);
   box-shadow: var(--shadow-xl);
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
   border: 1px solid var(--border-light);
   transition: all var(--transition-base);
 
@@ -1087,6 +1089,7 @@
   .cv-preview {
     padding: 1.25rem;
     border-radius: var(--radius-lg);
+    max-height: none;
   }
 
   .preview-name {

@@ -91,6 +91,18 @@
             <span class="current-status">
                 {{ isRejected(app.status) ? 'Closed' : 'Status: ' + app.status }}
             </span>
+            @if (app.status === 'Interview') {
+            @if (app.interviewId) {
+            <a class="btn-interview-action" routerLink="/interviews">
+                📹 Voir l'entretien
+            </a>
+            } @else {
+            <a class="btn-interview-action" [routerLink]="['/candidate/book-interview', app.id]"
+                [queryParams]="{companyId: app.companyId}">
+                📅 Choisir un créneau
+            </a>
+            }
+            }
             <span class="last-update">Updated {{ app.updatedAt | date:'short' }}</span>
         </div>
     </div>

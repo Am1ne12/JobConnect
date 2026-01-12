@@ -213,7 +213,6 @@ public class AuthController : ControllerBase
         }
         else if (user.Role == UserRole.Company && user.Company != null)
         {
-            // For companies, combine first and last name as company name, or just use first name
             user.Company.Name = string.IsNullOrWhiteSpace(dto.LastName) 
                 ? dto.FirstName 
                 : $"{dto.FirstName} {dto.LastName}".Trim();

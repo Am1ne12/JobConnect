@@ -140,12 +140,24 @@ public class CandidatesController : ControllerBase
             .Take(pageSize)
             .ToListAsync();
 
+        // Get interview IDs for these applications (only get the latest scheduled one, not rescheduled)
+        var applicationIds = applications.Select(a => a.Id).ToList();
+        var interviews = await _context.Interviews
+            .Where(i => applicationIds.Contains(i.ApplicationId) && i.Status != InterviewStatus.Rescheduled)
+            .Select(i => new { i.ApplicationId, i.Id })
+            .ToListAsync();
+        var interviewMap = interviews
+            .GroupBy(i => i.ApplicationId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(i => i.Id).First().Id);
+
         var items = applications.Select(a => new ApplicationDto(
             a.Id,
             a.CandidateProfileId,
             $"{profile.FirstName} {profile.LastName}",
             a.JobPostingId,
             a.JobPosting.Title,
+            a.JobPosting.CompanyId,
+            a.JobPosting.Company.Name,
             a.Status.ToString(),
             a.MatchingScore,
             a.CoverLetter,
@@ -153,7 +165,8 @@ public class CandidatesController : ControllerBase
             a.KanbanOrder,
             a.AppliedAt,
             a.UpdatedAt,
-            null
+            null,
+            interviewMap.GetValueOrDefault(a.Id)
         )).ToList();
 
         return Ok(new PagedResult<ApplicationDto>(

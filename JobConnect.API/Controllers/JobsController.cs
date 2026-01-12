@@ -321,6 +321,29 @@ public class JobsController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("{id}/unpublish")]
+    [Authorize(Roles = "Company")]
+    public async Task<ActionResult> UnpublishJob(int id)
+    {
+        var userId = GetUserId();
+        var company = await _context.Companies.FirstOrDefaultAsync(c => c.UserId == userId);
+
+        if (company == null)
+            return NotFound();
+
+        var job = await _context.JobPostings
+            .FirstOrDefaultAsync(j => j.Id == id && j.CompanyId == company.Id);
+
+        if (job == null)
+            return NotFound();
+
+        job.Status = JobStatus.Draft;
+        job.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
     [HttpPost("{id}/close")]
     [Authorize(Roles = "Company")]
     public async Task<ActionResult> CloseJob(int id)
@@ -485,4 +508,3 @@ public class JobsController : ControllerBase
         return NoContent();
     }
 }
-

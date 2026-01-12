@@ -29,18 +29,6 @@
     ],
     "dataGroups": [
         {
-            "name": "api-freshness",
-            "urls": [
-                "/api/**"
-            ],
-            "cacheConfig": {
-                "strategy": "freshness",
-                "maxSize": 100,
-                "maxAge": "1h",
-                "timeout": "10s"
-            }
-        },
-        {
             "name": "fonts",
             "urls": [
                 "https://fonts.googleapis.com/**",

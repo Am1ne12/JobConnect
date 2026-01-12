@@ -12,6 +12,7 @@ public class Company
     public string? Location { get; set; }
     public string? LogoUrl { get; set; }
     public int? EmployeeCount { get; set; }
+    public string? CalendarLink { get; set; } // Cal.com link (e.g., "username/event-type")
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -19,4 +20,6 @@ public class Company
     // Navigation properties
     public User User { get; set; } = null!;
     public ICollection<JobPosting> JobPostings { get; set; } = new List<JobPosting>();
+    public ICollection<CompanyAvailability> Availabilities { get; set; } = new List<CompanyAvailability>();
+    public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
 }

@@ -126,7 +126,8 @@ public record CompanyDto(
     string? Website,
     string? Location,
     string? LogoUrl,
-    int? EmployeeCount
+    int? EmployeeCount,
+    string? CalendarLink
 );
 
 public record CreateCompanyDto(
@@ -143,7 +144,8 @@ public record UpdateCompanyDto(
     string? Industry,
     string? Website,
     string? Location,
-    int? EmployeeCount
+    int? EmployeeCount,
+    string? CalendarLink
 );
 
 // Job DTOs
@@ -220,6 +222,8 @@ public record ApplicationDto(
     string CandidateName,
     int JobPostingId,
     string JobTitle,
+    int CompanyId,
+    string CompanyName,
     string Status,
     int MatchingScore,
     string? CoverLetter,
@@ -227,7 +231,8 @@ public record ApplicationDto(
     int KanbanOrder,
     DateTime AppliedAt,
     DateTime UpdatedAt,
-    CandidateProfileDto? CandidateProfile
+    CandidateProfileDto? CandidateProfile,
+    int? InterviewId
 );
 
 public record CreateApplicationDto(
@@ -252,6 +257,116 @@ public record SkillDto(
     int Id,
     string Name,
     string? Category
+);
+
+// Interview DTOs
+public record InterviewDto(
+    int Id,
+    int ApplicationId,
+    int CompanyId,
+    string CompanyName,
+    int CandidateProfileId,
+    string CandidateName,
+    int JobPostingId,
+    string JobTitle,
+    DateTime ScheduledAt,
+    DateTime EndsAt,
+    string Status,
+    string JitsiRoomId,
+    string? CancellationReason,
+    int? RescheduledFromId,
+    DateTime CreatedAt,
+    int UnreadMessageCount,
+    DateTime? CompanyJoinedAt
+);
+
+public record CreateInterviewDto(
+    [Required] int ApplicationId,
+    [Required] DateTime ScheduledAt
+);
+
+public record RescheduleInterviewDto(
+    [Required] DateTime NewScheduledAt,
+    string? Reason
+);
+
+public record CancelInterviewDto(
+    [Required] string Reason
+);
+
+public record InterviewJoinDto(
+    string RoomId,
+    string Provider,
+    string UserDisplayName,
+    bool CanJoin,
+    string? Message,
+    int? SecondsUntilStart,
+    string? MeetingToken
+);
+
+// Company Availability DTOs
+public record CompanyAvailabilityDto(
+    int Id,
+    int CompanyId,
+    DayOfWeek DayOfWeek,
+    TimeOnly StartTime,
+    TimeOnly EndTime,
+    bool IsActive
+);
+
+public record UpdateAvailabilityDto(
+    [Required] List<AvailabilitySlotDto> Slots
+);
+
+public record AvailabilitySlotDto(
+    DayOfWeek DayOfWeek,
+    TimeOnly StartTime,
+    TimeOnly EndTime,
+    bool IsActive
+);
+
+public record AvailableSlotDto(
+    DateTime StartTime,
+    DateTime EndTime
+);
+
+// Interview Message DTOs
+public record InterviewMessageDto(
+    int Id,
+    int InterviewId,
+    int SenderId,
+    string SenderRole,
+    string SenderName,
+    string Content,
+    DateTime SentAt,
+    bool IsRead
+);
+
+public record SendMessageDto(
+    [Required] string Content
+);
+
+// Notification DTOs
+public record NotificationDto(
+    int Id,
+    int UserId,
+    string Type,
+    string Title,
+    string Message,
+    string? Link,
+    bool IsRead,
+    DateTime CreatedAt
+);
+
+// Skill update DTO for candidates
+public record UpdateCandidateSkillsDto(
+    List<CandidateSkillUpdateDto> Skills
+);
+
+public record CandidateSkillUpdateDto(
+    int SkillId,
+    int ProficiencyLevel,
+    int? YearsOfExperience
 );
 
 // Pagination DTOs

@@ -303,6 +303,28 @@
     }
 }
 
+.btn-schedule {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+}
+
 // Mobile Move Select - Hidden on desktop
 .mobile-move {
     display: none;

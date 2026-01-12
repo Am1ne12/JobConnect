@@ -43,7 +43,8 @@ public class CompaniesController : ControllerBase
             company.Website,
             company.Location,
             company.LogoUrl,
-            company.EmployeeCount
+            company.EmployeeCount,
+            company.CalendarLink
         ));
     }
 
@@ -62,6 +63,7 @@ public class CompaniesController : ControllerBase
         if (dto.Website != null) company.Website = dto.Website;
         if (dto.Location != null) company.Location = dto.Location;
         if (dto.EmployeeCount.HasValue) company.EmployeeCount = dto.EmployeeCount;
+        if (dto.CalendarLink != null) company.CalendarLink = dto.CalendarLink;
 
         company.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -75,7 +77,8 @@ public class CompaniesController : ControllerBase
             company.Website,
             company.Location,
             company.LogoUrl,
-            company.EmployeeCount
+            company.EmployeeCount,
+            company.CalendarLink
         ));
     }
 
@@ -123,12 +126,24 @@ public class CompaniesController : ControllerBase
             .ThenBy(a => a.KanbanOrder)
             .ToListAsync();
 
+        // Get interview IDs for these applications (only get the latest scheduled one, not rescheduled)
+        var applicationIds = applications.Select(a => a.Id).ToList();
+        var interviews = await _context.Interviews
+            .Where(i => applicationIds.Contains(i.ApplicationId) && i.Status != InterviewStatus.Rescheduled)
+            .Select(i => new { i.ApplicationId, i.Id })
+            .ToListAsync();
+        var interviewMap = interviews
+            .GroupBy(i => i.ApplicationId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(i => i.Id).First().Id);
+
         return Ok(applications.Select(a => new ApplicationDto(
             a.Id,
             a.CandidateProfileId,
             $"{a.CandidateProfile.FirstName} {a.CandidateProfile.LastName}",
             a.JobPostingId,
             job.Title,
+            company.Id,
+            company.Name,
             a.Status.ToString(),
             a.MatchingScore,
             a.CoverLetter,
@@ -136,7 +151,8 @@ public class CompaniesController : ControllerBase
             a.KanbanOrder,
             a.AppliedAt,
             a.UpdatedAt,
-            MapCandidateToDto(a.CandidateProfile)
+            MapCandidateToDto(a.CandidateProfile),
+            interviewMap.GetValueOrDefault(a.Id)
         )));
     }
 
@@ -151,15 +167,33 @@ public class CompaniesController : ControllerBase
 
         var application = await _context.Applications
             .Include(a => a.JobPosting)
+            .Include(a => a.CandidateProfile)
             .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPostingId == jobId && a.JobPosting.CompanyId == company.Id);
 
         if (application == null)
             return NotFound();
 
+        var previousStatus = application.Status;
         application.Status = dto.Status;
         if (dto.Notes != null) application.Notes = dto.Notes;
         if (dto.KanbanOrder.HasValue) application.KanbanOrder = dto.KanbanOrder.Value;
         application.UpdatedAt = DateTime.UtcNow;
+
+        // Create notification when status changes to Interview
+        if (dto.Status == ApplicationStatus.Interview && previousStatus != ApplicationStatus.Interview)
+        {
+            var notification = new Notification
+            {
+                UserId = application.CandidateProfile.UserId,
+                Title = "📅 Entretien à planifier",
+                Message = $"Bonne nouvelle ! {company.Name} souhaite vous rencontrer pour le poste de {application.JobPosting.Title}. Choisissez un créneau d'entretien.",
+                Type = "InterviewRequest",
+                RelatedId = application.Id,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _context.Notifications.Add(notification);
+        }
 
         await _context.SaveChangesAsync();
         return Ok();
@@ -178,18 +212,52 @@ public class CompaniesController : ControllerBase
         {
             var application = await _context.Applications
                 .Include(a => a.JobPosting)
+                .Include(a => a.CandidateProfile)
                 .FirstOrDefaultAsync(a => a.Id == update.ApplicationId && a.JobPosting.CompanyId == company.Id);
 
             if (application != null)
             {
+                var previousStatus = application.Status;
                 application.Status = update.NewStatus;
                 application.KanbanOrder = update.NewOrder;
                 application.UpdatedAt = DateTime.UtcNow;
+                
+                // Create notification for candidate if status changed
+                if (previousStatus != update.NewStatus)
+                {
+                    var statusLabel = GetStatusLabel(update.NewStatus);
+                    var notification = new Notification
+                    {
+                        UserId = application.CandidateProfile.UserId,
+                        Type = "application_status",
+                        Title = "Mise à jour de votre candidature",
+                        Message = $"Votre candidature pour \"{application.JobPosting.Title}\" chez {company.Name} est passée à l'étape : {statusLabel}",
+                        Link = "/applications",
+                        RelatedId = application.Id,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Notifications.Add(notification);
+                }
             }
         }
 
         await _context.SaveChangesAsync();
         return Ok();
+    }
+    
+    private string GetStatusLabel(ApplicationStatus status)
+    {
+        return status switch
+        {
+            ApplicationStatus.Submitted => "Soumise",
+            ApplicationStatus.Screening => "En cours d'examen",
+            ApplicationStatus.Interview => "Entretien",
+            ApplicationStatus.Offer => "Offre",
+            ApplicationStatus.Hired => "Embauché",
+            ApplicationStatus.Rejected => "Refusée",
+            _ => status.ToString()
+        };
     }
 
     private JobPostingDto MapJobToDto(JobPosting job, string companyName)

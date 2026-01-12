@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobConnect.API", "JobConnect.API\JobConnect.API.csproj", "{BA304B4A-6DFA-C0E9-0A13-F16A355F4FDB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA304B4A-6DFA-C0E9-0A13-F16A355F4FDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA304B4A-6DFA-C0E9-0A13-F16A355F4FDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA304B4A-6DFA-C0E9-0A13-F16A355F4FDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA304B4A-6DFA-C0E9-0A13-F16A355F4FDB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7188E1A7-83F6-4DC2-9858-8C3BD57BAD63}
+	EndGlobalSection
+EndGlobal

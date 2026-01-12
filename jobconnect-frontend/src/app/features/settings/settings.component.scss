@@ -124,6 +124,13 @@
     }
 }
 
+.helper-text {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
 /* Form Styles */
 .form-row {
     display: flex;

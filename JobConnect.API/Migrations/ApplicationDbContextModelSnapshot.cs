@@ -17,7 +17,7 @@ namespace JobConnect.API.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -31,7 +31,7 @@ namespace JobConnect.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("AppliedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("CandidateProfileId")
                         .HasColumnType("integer");
@@ -56,7 +56,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -80,7 +80,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("jsonb");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("EducationJson")
                         .HasColumnType("jsonb");
@@ -109,7 +109,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -151,8 +151,11 @@ namespace JobConnect.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CalendarLink")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -174,7 +177,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -190,6 +193,168 @@ namespace JobConnect.API.Migrations
                     b.ToTable("Companies");
                 });
 
+            modelBuilder.Entity("JobConnect.API.Models.CompanyAvailability", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("CompanyAvailabilities");
+                });
+
+            modelBuilder.Entity("JobConnect.API.Models.CompanyUnavailability", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "StartTime");
+
+                    b.ToTable("CompanyUnavailabilities");
+                });
+
+            modelBuilder.Entity("JobConnect.API.Models.Interview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApplicationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("CandidateProfileId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CompanyJoinedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("JitsiRoomId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("RescheduledFromId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ScheduledAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("CandidateProfileId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("JitsiRoomId")
+                        .IsUnique();
+
+                    b.HasIndex("RescheduledFromId");
+
+                    b.ToTable("Interviews");
+                });
+
+            modelBuilder.Entity("JobConnect.API.Models.InterviewMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("InterviewId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SenderRole")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InterviewId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("InterviewMessages");
+                });
+
             modelBuilder.Entity("JobConnect.API.Models.JobPosting", b =>
                 {
                     b.Property<int>("Id")
@@ -202,13 +367,13 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -224,7 +389,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("PublishedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Requirements")
                         .HasColumnType("text");
@@ -251,7 +416,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -279,6 +444,48 @@ namespace JobConnect.API.Migrations
                     b.HasIndex("SkillId");
 
                     b.ToTable("JobSkills");
+                });
+
+            modelBuilder.Entity("JobConnect.API.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Link")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("RelatedId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsRead");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("JobConnect.API.Models.Skill", b =>
@@ -402,7 +609,7 @@ namespace JobConnect.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -423,7 +630,7 @@ namespace JobConnect.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -493,6 +700,81 @@ namespace JobConnect.API.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("JobConnect.API.Models.CompanyAvailability", b =>
+                {
+                    b.HasOne("JobConnect.API.Models.Company", "Company")
+                        .WithMany("Availabilities")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("JobConnect.API.Models.CompanyUnavailability", b =>
+                {
+                    b.HasOne("JobConnect.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("JobConnect.API.Models.Interview", b =>
+                {
+                    b.HasOne("JobConnect.API.Models.Application", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JobConnect.API.Models.CandidateProfile", "CandidateProfile")
+                        .WithMany()
+                        .HasForeignKey("CandidateProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JobConnect.API.Models.Company", "Company")
+                        .WithMany("Interviews")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JobConnect.API.Models.Interview", "RescheduledFrom")
+                        .WithMany()
+                        .HasForeignKey("RescheduledFromId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("CandidateProfile");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("RescheduledFrom");
+                });
+
+            modelBuilder.Entity("JobConnect.API.Models.InterviewMessage", b =>
+                {
+                    b.HasOne("JobConnect.API.Models.Interview", "Interview")
+                        .WithMany("Messages")
+                        .HasForeignKey("InterviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JobConnect.API.Models.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Interview");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("JobConnect.API.Models.JobPosting", b =>
                 {
                     b.HasOne("JobConnect.API.Models.Company", "Company")
@@ -523,6 +805,17 @@ namespace JobConnect.API.Migrations
                     b.Navigation("Skill");
                 });
 
+            modelBuilder.Entity("JobConnect.API.Models.Notification", b =>
+                {
+                    b.HasOne("JobConnect.API.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("JobConnect.API.Models.CandidateProfile", b =>
                 {
                     b.Navigation("Applications");
@@ -532,7 +825,16 @@ namespace JobConnect.API.Migrations
 
             modelBuilder.Entity("JobConnect.API.Models.Company", b =>
                 {
+                    b.Navigation("Availabilities");
+
+                    b.Navigation("Interviews");
+
                     b.Navigation("JobPostings");
+                });
+
+            modelBuilder.Entity("JobConnect.API.Models.Interview", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("JobConnect.API.Models.JobPosting", b =>

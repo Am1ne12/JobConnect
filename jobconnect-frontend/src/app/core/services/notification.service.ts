@@ -1,4 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ConfigService } from './config.service';
+import { SignalRService, NotificationMessage } from './signalr.service';
 
 export interface Notification {
     id: number;
@@ -7,13 +10,73 @@ export interface Notification {
     duration?: number;
 }
 
+export interface AppNotification {
+    id: number;
+    type: string;
+    title: string;
+    message: string;
+    link?: string;
+    isRead: boolean;
+    createdAt: Date;
+}
+
 @Injectable({
     providedIn: 'root'
 })
 export class NotificationService {
+    private http = inject(HttpClient);
+    private configService = inject(ConfigService);
+    private signalR = inject(SignalRService);
+
+    private get API_URL() { return `${this.configService.apiUrl}/notifications`; }
+
     private idCounter = 0;
+
+    // Toast notifications (temporary)
     notifications = signal<Notification[]>([]);
 
+    // App notifications (persistent, from backend)
+    appNotifications = signal<AppNotification[]>([]);
+
+    unreadCount = computed(() =>
+        this.appNotifications().filter(n => !n.isRead).length
+    );
+
+    constructor() {
+        // Subscribe to real-time notifications from SignalR
+        this.signalR.onNotification((notification: NotificationMessage) => {
+            console.log('Real-time notification received:', notification);
+
+            // Add to app notifications
+            const appNotif: AppNotification = {
+                id: notification.id,
+                type: notification.type,
+                title: notification.title,
+                message: notification.message,
+                link: notification.link || undefined,
+                isRead: false,
+                createdAt: new Date(notification.createdAt)
+            };
+            this.appNotifications.update(n => [appNotif, ...n]);
+
+            // Also show a toast notification
+            this.show(notification.message, 'info', 6000);
+        });
+    }
+
+    // Load notifications from backend
+    loadNotifications() {
+        this.http.get<AppNotification[]>(this.API_URL).subscribe({
+            next: (notifications) => {
+                this.appNotifications.set(notifications);
+            },
+            error: (err) => {
+                console.error('Failed to load notifications:', err);
+            }
+        });
+    }
+
+    // Toast methods
     show(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration = 4000) {
         const notification: Notification = {
             id: ++this.idCounter,
@@ -51,5 +114,46 @@ export class NotificationService {
 
     dismissAll() {
         this.notifications.set([]);
+    }
+
+    // App notification methods (backend persistence)
+    markAsRead(id: number) {
+        this.http.put(`${this.API_URL}/${id}/read`, {}).subscribe({
+            next: () => {
+                this.appNotifications.update(n =>
+                    n.map(notif => notif.id === id ? { ...notif, isRead: true } : notif)
+                );
+            }
+        });
+    }
+
+    markAllAsRead() {
+        this.http.put(`${this.API_URL}/read-all`, {}).subscribe({
+            next: () => {
+                this.appNotifications.update(n =>
+                    n.map(notif => ({ ...notif, isRead: true }))
+                );
+            }
+        });
+    }
+
+    deleteNotification(id: number) {
+        this.http.delete(`${this.API_URL}/${id}`).subscribe({
+            next: () => {
+                this.appNotifications.update(n => n.filter(notif => notif.id !== id));
+            }
+        });
+    }
+
+    deleteAllNotifications() {
+        this.http.delete(this.API_URL).subscribe({
+            next: () => {
+                this.appNotifications.set([]);
+            }
+        });
+    }
+
+    clearAppNotifications() {
+        this.appNotifications.set([]);
     }
 }

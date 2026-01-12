@@ -70,12 +70,35 @@ public class ApplicationsController : ControllerBase
         _context.Applications.Add(application);
         await _context.SaveChangesAsync();
 
+        // Get company for notification
+        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == job.CompanyId);
+        
+        // Create notification for the company
+        if (company != null)
+        {
+            var notification = new Notification
+            {
+                UserId = company.UserId,
+                Type = "application_received",
+                Title = "Nouvelle candidature",
+                Message = $"{profile.FirstName} {profile.LastName} a postulé à votre offre \"{job.Title}\"",
+                Link = $"/company/dashboard",
+                RelatedId = application.Id,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+        }
+
         return Ok(new ApplicationDto(
             application.Id,
             application.CandidateProfileId,
             $"{profile.FirstName} {profile.LastName}",
             application.JobPostingId,
             job.Title,
+            job.CompanyId,
+            company?.Name ?? "",
             application.Status.ToString(),
             application.MatchingScore,
             application.CoverLetter,
@@ -83,6 +106,7 @@ public class ApplicationsController : ControllerBase
             application.KanbanOrder,
             application.AppliedAt,
             application.UpdatedAt,
+            null,
             null
         ));
     }
@@ -116,12 +140,18 @@ public class ApplicationsController : ControllerBase
                 return Forbid();
         }
 
+        // Check for interview
+        var interview = await _context.Interviews
+            .FirstOrDefaultAsync(i => i.ApplicationId == application.Id);
+
         return Ok(new ApplicationDto(
             application.Id,
             application.CandidateProfileId,
             $"{application.CandidateProfile.FirstName} {application.CandidateProfile.LastName}",
             application.JobPostingId,
             application.JobPosting.Title,
+            application.JobPosting.CompanyId,
+            application.JobPosting.Company.Name,
             application.Status.ToString(),
             application.MatchingScore,
             application.CoverLetter,
@@ -129,7 +159,8 @@ public class ApplicationsController : ControllerBase
             application.KanbanOrder,
             application.AppliedAt,
             application.UpdatedAt,
-            null
+            null,
+            interview?.Id
         ));
     }
 

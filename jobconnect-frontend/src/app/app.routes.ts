@@ -14,7 +14,6 @@ export const routes: Routes = [
         canActivate: [redirectAdminFromJobsGuard],
         loadComponent: () => import('./features/jobs/jobs-list.component').then(m => m.JobsListComponent)
     },
-
     {
         path: 'jobs/:id',
         canActivate: [redirectAdminFromJobsGuard],
@@ -87,11 +86,32 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/company/candidates/candidates-view.component').then(m => m.CandidatesViewComponent)
             },
             {
+                path: 'calendar',
+                loadComponent: () => import('./features/company/calendar/company-calendar.component').then(m => m.CompanyCalendarComponent)
+            },
+            {
                 path: '',
                 redirectTo: 'dashboard',
                 pathMatch: 'full'
             }
         ]
+    },
+
+    // Interview routes (authenticated users)
+    {
+        path: 'interviews',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/interview/interview-list.component').then(m => m.InterviewListComponent)
+    },
+    {
+        path: 'interview/:id/room',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/interview/video-room.component').then(m => m.VideoRoomComponent)
+    },
+    {
+        path: 'candidate/book-interview/:applicationId',
+        canActivate: [candidateGuard],
+        loadComponent: () => import('./features/interview/book-interview.component').then(m => m.BookInterviewComponent)
     },
 
     // Admin routes

@@ -10,6 +10,13 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.ConfigureWarnings(warnings =>
+            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    }
+
+
     public DbSet<User> Users => Set<User>();
     public DbSet<CandidateProfile> CandidateProfiles => Set<CandidateProfile>();
     public DbSet<Company> Companies => Set<Company>();
@@ -18,6 +25,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<CandidateSkill> CandidateSkills => Set<CandidateSkill>();
     public DbSet<JobSkill> JobSkills => Set<JobSkill>();
+    public DbSet<Interview> Interviews => Set<Interview>();
+    public DbSet<CompanyAvailability> CompanyAvailabilities => Set<CompanyAvailability>();
+    public DbSet<CompanyUnavailability> CompanyUnavailabilities => Set<CompanyUnavailability>();
+    public DbSet<InterviewMessage> InterviewMessages => Set<InterviewMessage>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -104,6 +116,85 @@ public class ApplicationDbContext : DbContext
             .HasOne(js => js.Skill)
             .WithMany(s => s.JobSkills)
             .HasForeignKey(js => js.SkillId);
+
+        // Interview configuration
+        modelBuilder.Entity<Interview>(entity =>
+        {
+            entity.Property(e => e.Status).HasConversion<string>();
+            
+            // Force timestamp without time zone to prevent UTC conversion
+            entity.Property(e => e.ScheduledAt).HasColumnType("timestamp without time zone");
+            entity.Property(e => e.EndsAt).HasColumnType("timestamp without time zone");
+            
+            entity.HasOne(i => i.Application)
+                .WithMany()
+                .HasForeignKey(i => i.ApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(i => i.Company)
+                .WithMany(c => c.Interviews)
+                .HasForeignKey(i => i.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(i => i.CandidateProfile)
+                .WithMany()
+                .HasForeignKey(i => i.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(i => i.RescheduledFrom)
+                .WithMany()
+                .HasForeignKey(i => i.RescheduledFromId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasIndex(e => e.JitsiRoomId).IsUnique();
+        });
+
+        // CompanyAvailability configuration
+        modelBuilder.Entity<CompanyAvailability>(entity =>
+        {
+            entity.HasOne(ca => ca.Company)
+                .WithMany(c => c.Availabilities)
+                .HasForeignKey(ca => ca.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Note: No unique constraint - allows multiple slots per day
+        });
+
+        // InterviewMessage configuration
+        modelBuilder.Entity<InterviewMessage>(entity =>
+        {
+            entity.HasOne(m => m.Interview)
+                .WithMany(i => i.Messages)
+                .HasForeignKey(m => m.InterviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Notification configuration
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
+        });
+
+        // CompanyUnavailability configuration
+        modelBuilder.Entity<CompanyUnavailability>(entity =>
+        {
+            entity.HasOne(u => u.Company)
+                .WithMany()
+                .HasForeignKey(u => u.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(e => new { e.CompanyId, e.StartTime });
+        });
 
         // Seed some default skills
         modelBuilder.Entity<Skill>().HasData(

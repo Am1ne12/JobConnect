@@ -16,6 +16,10 @@ export class CompanyService {
         return this.http.get<Company>(`${this.API_URL}/profile`);
     }
 
+    getCompany(companyId: number): Observable<Company> {
+        return this.http.get<Company>(`${this.configService.apiUrl}/public/companies/${companyId}`);
+    }
+
     updateProfile(profile: Partial<Company>): Observable<Company> {
         return this.http.put<Company>(`${this.API_URL}/profile`, profile);
     }

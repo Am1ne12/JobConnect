@@ -25,6 +25,7 @@ export class JobEditComponent implements OnInit {
     loading = signal(true);
     saving = signal(false);
     error = signal<string | null>(null);
+    shouldPublish = signal(false);
     selectedStatus = signal<JobStatus>(JobStatus.Draft);
 
     readonly jobTypes = [
@@ -53,6 +54,9 @@ export class JobEditComponent implements OnInit {
         { value: 'AUD', label: 'AUD - Australian Dollar', icon: '$' }
     ];
 
+    // Expose JobStatus enum to template
+    readonly JobStatus = JobStatus;
+
     get jobId(): number {
         return parseInt(this.id);
     }
@@ -77,6 +81,7 @@ export class JobEditComponent implements OnInit {
             next: (job) => {
                 this.job.set(job);
                 this.populateForm(job);
+                this.shouldPublish.set(job.status === 'Published');
                 // Set the selected status based on current job status
                 if (job.status === 'Draft') {
                     this.selectedStatus.set(JobStatus.Draft);
@@ -137,12 +142,19 @@ export class JobEditComponent implements OnInit {
         return typeString || 'FullTime';
     }
 
-    setStatus(status: JobStatus) {
-        this.selectedStatus.set(status);
+    setShouldPublish(value: boolean) {
+        this.shouldPublish.set(value);
+        if (value) {
+            this.selectedStatus.set(JobStatus.Published);
+        } else {
+            this.selectedStatus.set(JobStatus.Draft);
+        }
     }
 
-    // Expose JobStatus enum to template
-    readonly JobStatus = JobStatus;
+    setStatus(status: JobStatus) {
+        this.selectedStatus.set(status);
+        this.shouldPublish.set(status === JobStatus.Published);
+    }
 
     toggleSkill(skillId: number) {
         const current = this.selectedSkills();

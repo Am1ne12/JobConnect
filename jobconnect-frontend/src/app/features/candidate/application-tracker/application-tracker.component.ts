@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { Application, ApplicationStatus } from '../../../core/models';
 
@@ -12,7 +13,7 @@ interface StatusStep {
 @Component({
     selector: 'app-application-tracker',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, RouterLink],
     templateUrl: './application-tracker.component.html',
     styleUrl: './application-tracker.component.scss'
 })

@@ -190,6 +190,11 @@ Set the following environment variables in Coolify:
 | `JwtSettings__Audience` | JWT audience | `JobConnectUsers` | Yes |
 | `JwtSettings__ExpiryMinutes` | Token expiration | `60` | Yes |
 | `CorsOrigins` | Allowed CORS origins | `https://yourdomain.com,https://www.yourdomain.com` | Yes |
+<<<<<<< HEAD
+
+> **Tip**: Use Coolify's magic variables for passwords: `${SERVICE_PASSWORD_64_BACKEND}` to auto-generate a secure JWT secret.
+
+=======
 | `ADMIN_EMAIL` | Default admin account email | `admin@jobconnect.com` | No |
 | `ADMIN_PASSWORD` | Default admin account password | `Admin123!` | No |
 | `SEED_DATABASE` | Enable database seeding | `true` or `false` | No |
@@ -214,6 +219,7 @@ The seeder creates:
 
 > **Note**: If data already exists, the seeder will skip by default. Use `FORCE_SEED=true` to add sample data even if the database isn't empty.
 
+>>>>>>> upstream/main
 ### Configuring the Domain and Port
 
 1. In the backend resource settings, go to **Settings**

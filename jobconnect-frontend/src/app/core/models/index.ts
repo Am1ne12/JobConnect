@@ -107,22 +107,23 @@ export interface Company {
     location?: string;
     logoUrl?: string;
     employeeCount?: number;
+    calendarLink?: string; // Cal.com link (e.g., "username/event-type")
 }
 
 // Job types
-export enum JobStatus {
-    Draft = 0,
-    Published = 1,
-    Closed = 2,
-    Archived = 3
+export enum JobType {
+    FullTime = 'FullTime',
+    PartTime = 'PartTime',
+    Contract = 'Contract',
+    Internship = 'Internship',
+    Remote = 'Remote'
 }
 
-export enum JobType {
-    FullTime = 0,
-    PartTime = 1,
-    Contract = 2,
-    Internship = 3,
-    Remote = 4
+export enum JobStatus {
+    Draft = 'Draft',
+    Published = 'Published',
+    Closed = 'Closed',
+    Archived = 'Archived'
 }
 
 export interface JobPosting {
@@ -185,6 +186,8 @@ export interface Application {
     candidateName: string;
     jobPostingId: number;
     jobTitle: string;
+    companyId: number;
+    companyName?: string;
     status: string;
     matchingScore: number;
     coverLetter?: string;
@@ -193,6 +196,7 @@ export interface Application {
     appliedAt: Date;
     updatedAt: Date;
     candidateProfile?: CandidateProfile;
+    interviewId?: number;
 }
 
 export interface KanbanUpdate {
@@ -208,6 +212,123 @@ export interface Skill {
     category?: string;
 }
 
+// Interview types
+export enum InterviewStatus {
+    Scheduled = 'Scheduled',
+    InWaitingRoom = 'InWaitingRoom',
+    InProgress = 'InProgress',
+    Completed = 'Completed',
+    Cancelled = 'Cancelled',
+    Rescheduled = 'Rescheduled'
+}
+
+export interface Interview {
+    id: number;
+    applicationId: number;
+    companyId: number;
+    companyName: string;
+    candidateProfileId: number;
+    candidateName: string;
+    jobPostingId: number;
+    jobTitle: string;
+    scheduledAt: Date;
+    endsAt: Date;
+    status: string;
+    jitsiRoomId: string;
+    cancellationReason?: string;
+    rescheduledFromId?: number;
+    createdAt: Date;
+    unreadMessageCount: number;
+    companyJoinedAt?: Date;
+}
+
+export interface CreateInterviewRequest {
+    applicationId: number;
+    scheduledAt: Date;
+}
+
+export interface RescheduleInterviewRequest {
+    newScheduledAt: Date;
+    reason?: string;
+}
+
+export interface CancelInterviewRequest {
+    reason: string;
+}
+
+export interface InterviewJoinInfo {
+    roomId: string;
+    provider: string;
+    userDisplayName: string;
+    canJoin: boolean;
+    message?: string;
+    secondsUntilStart?: number;
+    meetingToken?: string;
+}
+
+// Company Availability types
+export interface CompanyAvailability {
+    id: number;
+    companyId: number;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    isActive: boolean;
+}
+
+export interface AvailabilitySlot {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    isActive: boolean;
+}
+
+export interface UpdateAvailabilityRequest {
+    slots: AvailabilitySlot[];
+}
+
+export interface AvailableSlot {
+    startTime: Date;
+    endTime: Date;
+}
+
+// Date-specific availability slot (from CompanyAvailabilitySlot model)
+export interface CalendarSlot {
+    id: number;
+    slotDate: string;  // DateOnly as ISO string "2026-01-15"
+    startTime: string; // TimeOnly as "09:00:00"
+    endTime: string;   // TimeOnly as "10:30:00"
+    isBooked: boolean;
+}
+
+// Interview Message types
+export interface InterviewMessage {
+    id: number;
+    interviewId: number;
+    senderId: number;
+    senderRole: string;
+    senderName: string;
+    content: string;
+    sentAt: Date;
+    isRead: boolean;
+}
+
+export interface SendMessageRequest {
+    content: string;
+}
+
+// Notification types
+export interface Notification {
+    id: number;
+    userId: number;
+    type: string;
+    title: string;
+    message: string;
+    link?: string;
+    isRead: boolean;
+    createdAt: Date;
+}
+
 // Pagination types
 export interface PagedResult<T> {
     items: T[];
@@ -221,4 +342,3 @@ export interface PaginationParams {
     page?: number;
     pageSize?: number;
 }
-

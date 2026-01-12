@@ -57,5 +57,8 @@ export class JobService {
     closeJob(id: number): Observable<void> {
         return this.http.post<void>(`${this.API_URL}/${id}/close`, {});
     }
-}
 
+    unpublishJob(id: number): Observable<void> {
+        return this.http.post<void>(`${this.API_URL}/${id}/unpublish`, {});
+    }
+}
