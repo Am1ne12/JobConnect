@@ -113,7 +113,6 @@ export class CompanyDashboardComponent implements OnInit {
   jobs = signal<JobPosting[]>([]);
   loading = signal(true);
   hasAvailability = signal(false);
-  hasCalendarLink = signal(false);
   settingUpAvailability = signal(false);
 
   totalApplications = signal(0);
@@ -132,7 +131,6 @@ export class CompanyDashboardComponent implements OnInit {
   private loadData() {
     this.companyService.getProfile().subscribe(company => {
       this.company.set(company);
-      this.hasCalendarLink.set(!!company.calendarLink);
     });
 
     this.companyService.getJobs().subscribe({

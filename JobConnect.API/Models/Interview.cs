@@ -24,7 +24,6 @@ public class Interview
     [Column(TypeName = "timestamp without time zone")]
     public DateTime EndsAt { get; set; }
     public InterviewStatus Status { get; set; } = InterviewStatus.Scheduled;
-    public string JitsiRoomId { get; set; } = string.Empty;
     public string? CancellationReason { get; set; }
     public int? RescheduledFromId { get; set; }
     public DateTime? CompanyJoinedAt { get; set; }  // Track when company joins the call

@@ -107,7 +107,6 @@ export interface Company {
     location?: string;
     logoUrl?: string;
     employeeCount?: number;
-    calendarLink?: string; // Cal.com link (e.g., "username/event-type")
 }
 
 // Job types
@@ -234,7 +233,6 @@ export interface Interview {
     scheduledAt: Date;
     endsAt: Date;
     status: string;
-    jitsiRoomId: string;
     cancellationReason?: string;
     rescheduledFromId?: number;
     createdAt: Date;

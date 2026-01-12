@@ -126,8 +126,7 @@ public record CompanyDto(
     string? Website,
     string? Location,
     string? LogoUrl,
-    int? EmployeeCount,
-    string? CalendarLink
+    int? EmployeeCount
 );
 
 public record CreateCompanyDto(
@@ -144,8 +143,7 @@ public record UpdateCompanyDto(
     string? Industry,
     string? Website,
     string? Location,
-    int? EmployeeCount,
-    string? CalendarLink
+    int? EmployeeCount
 );
 
 // Job DTOs
@@ -272,7 +270,6 @@ public record InterviewDto(
     DateTime ScheduledAt,
     DateTime EndsAt,
     string Status,
-    string JitsiRoomId,
     string? CancellationReason,
     int? RescheduledFromId,
     DateTime CreatedAt,

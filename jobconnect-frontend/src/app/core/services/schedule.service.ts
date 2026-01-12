@@ -13,7 +13,6 @@ export interface BookingResult {
     interviewId: number;
     scheduledAt: string;
     endsAt: string;
-    jitsiRoomId: string;
     companyName: string;
     jobTitle: string;
 }

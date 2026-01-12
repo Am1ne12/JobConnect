@@ -36,8 +36,7 @@ public class PublicController : ControllerBase
             company.Website,
             company.Location,
             company.LogoUrl,
-            company.EmployeeCount,
-            company.CalendarLink
+            company.EmployeeCount
         ));
     }
 }

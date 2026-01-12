@@ -436,7 +436,7 @@ public class InterviewsController : ControllerBase
             interview.Status == InterviewStatus.Completed)
         {
             return Ok(new InterviewJoinDto(
-                interview.JitsiRoomId,
+                "",
                 "", // No domain for Daily.co
                 displayName,
                 false,
@@ -450,7 +450,7 @@ public class InterviewsController : ControllerBase
         if (now < waitingRoomOpens)
         {
             return Ok(new InterviewJoinDto(
-                interview.JitsiRoomId,
+                "",
                 "",
                 displayName,
                 false,
@@ -464,7 +464,7 @@ public class InterviewsController : ControllerBase
         if (role != "Company" && interview.CompanyJoinedAt == null)
         {
             return Ok(new InterviewJoinDto(
-                interview.JitsiRoomId,
+                "",
                 "",
                 displayName,
                 false,
@@ -485,7 +485,7 @@ public class InterviewsController : ControllerBase
             }
 
             return Ok(new InterviewJoinDto(
-                interview.JitsiRoomId,
+                "",
                 "",
                 displayName,
                 false,
@@ -612,7 +612,6 @@ public class InterviewsController : ControllerBase
             i.ScheduledAt,
             i.EndsAt,
             i.Status.ToString(),
-            i.JitsiRoomId,
             i.CancellationReason,
             i.RescheduledFromId,
             i.CreatedAt,

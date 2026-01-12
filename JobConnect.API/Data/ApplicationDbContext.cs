@@ -145,8 +145,6 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(i => i.RescheduledFromId)
                 .OnDelete(DeleteBehavior.SetNull);
-            
-            entity.HasIndex(e => e.JitsiRoomId).IsUnique();
         });
 
         // CompanyAvailability configuration

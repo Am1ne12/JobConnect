@@ -12,7 +12,6 @@ public class Company
     public string? Location { get; set; }
     public string? LogoUrl { get; set; }
     public int? EmployeeCount { get; set; }
-    public string? CalendarLink { get; set; } // Cal.com link (e.g., "username/event-type")
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

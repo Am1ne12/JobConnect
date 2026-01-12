@@ -204,8 +204,7 @@ public class ScheduleController : ControllerBase
             CandidateProfileId = application.CandidateProfileId,
             ScheduledAt = scheduledAt,
             EndsAt = endsAt,
-            Status = InterviewStatus.Scheduled,
-            JitsiRoomId = $"jobconnect-{Guid.NewGuid():N}"
+            Status = InterviewStatus.Scheduled
         };
 
         _context.Interviews.Add(interview);
@@ -253,7 +252,6 @@ public class ScheduleController : ControllerBase
             interview.Id,
             interview.ScheduledAt,
             interview.EndsAt,
-            interview.JitsiRoomId,
             application.JobPosting.Company.Name,
             application.JobPosting.Title
         ));
@@ -576,7 +574,6 @@ public class ScheduleController : ControllerBase
             interview.Id,
             interview.ScheduledAt,
             interview.EndsAt,
-            interview.JitsiRoomId,
             interview.Application.JobPosting.Company.Name,
             interview.Application.JobPosting.Title
         ));
@@ -712,7 +709,7 @@ public class ScheduleController : ControllerBase
 // DTOs
 public record SlotDto(string StartTime, string EndTime, bool Available);
 public record BookSlotDto(int ApplicationId, string Date, string StartTime);
-public record BookingResultDto(int InterviewId, DateTime ScheduledAt, DateTime EndsAt, string JitsiRoomId, string CompanyName, string JobTitle);
+public record BookingResultDto(int InterviewId, DateTime ScheduledAt, DateTime EndsAt, string CompanyName, string JobTitle);
 public record BlockPeriodDto(DateTime StartTime, DateTime EndTime, string? Reason);
 public record UnavailabilityDto(int Id, DateTime StartTime, DateTime EndTime, string? Reason);
 public record CalendarSlotDto(

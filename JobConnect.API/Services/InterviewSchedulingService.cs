@@ -12,7 +12,6 @@ public interface IInterviewSchedulingService
     Task<Interview> ScheduleInterviewAsync(int applicationId, DateTime scheduledAt, int candidateProfileId);
     Task<Interview> RescheduleInterviewAsync(int interviewId, DateTime newScheduledAt, string? reason);
     Task<Interview> CancelInterviewAsync(int interviewId, string reason);
-    string GenerateJitsiRoomId();
 }
 
 public class InterviewSchedulingService : IInterviewSchedulingService
@@ -130,8 +129,7 @@ public class InterviewSchedulingService : IInterviewSchedulingService
             CandidateProfileId = candidateProfileId,
             ScheduledAt = scheduledAt,
             EndsAt = scheduledAt.Add(InterviewDuration),
-            Status = InterviewStatus.Scheduled,
-            JitsiRoomId = GenerateJitsiRoomId()
+            Status = InterviewStatus.Scheduled
         };
 
         _context.Interviews.Add(interview);
@@ -171,7 +169,6 @@ public class InterviewSchedulingService : IInterviewSchedulingService
             ScheduledAt = newScheduledAt,
             EndsAt = newScheduledAt.Add(InterviewDuration),
             Status = InterviewStatus.Scheduled,
-            JitsiRoomId = GenerateJitsiRoomId(),
             RescheduledFromId = oldInterview.Id
         };
 
@@ -209,13 +206,5 @@ public class InterviewSchedulingService : IInterviewSchedulingService
         await _context.SaveChangesAsync();
         
         return deletedInterview;
-    }
-
-    /// <summary>
-    /// Generate a unique Jitsi room ID
-    /// </summary>
-    public string GenerateJitsiRoomId()
-    {
-        return $"jobconnect-{Guid.NewGuid():N}";
     }
 }

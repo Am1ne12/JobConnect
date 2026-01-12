@@ -128,40 +128,6 @@ import { ConfigService } from '../../core/services/config.service';
             </button>
           </form>
         </div>
-
-        <!-- Cal.com Integration (Companies Only) -->
-        @if (authService.isCompany()) {
-        <div class="settings-card">
-          <div class="card-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <h2>Calendrier de réservation</h2>
-          </div>
-          
-          <p class="current-value">Lien Cal.com actuel: <strong>{{ currentCalendarLink() || 'Non configuré' }}</strong></p>
-          <p class="helper-text">Entrez votre lien Cal.com pour permettre aux candidats de réserver des entretiens.</p>
-          
-          <form [formGroup]="calendarForm" (ngSubmit)="saveCalendarLink()">
-            <div class="form-group">
-              <label>Lien Cal.com</label>
-              <input type="text" formControlName="calendarLink" placeholder="username/event-type (ex: techcorp/interview)">
-            </div>
-
-            @if (calendarError()) {
-              <div class="error-message">{{ calendarError() }}</div>
-            }
-
-            <button type="submit" class="btn-primary" [disabled]="calendarLoading() || calendarForm.invalid">
-              {{ calendarLoading() ? 'Enregistrement...' : 'Enregistrer le lien' }}
-            </button>
-          </form>
-        </div>
-        }
-      </div>
     </div>
   `,
   styleUrl: './settings.component.scss'
@@ -181,12 +147,6 @@ export class SettingsComponent implements OnInit {
 
   passwordLoading = signal(false);
   passwordError = signal<string | null>(null);
-
-  // Cal.com integration
-  calendarForm: FormGroup;
-  currentCalendarLink = signal<string>('');
-  calendarLoading = signal(false);
-  calendarError = signal<string | null>(null);
 
   constructor(
     private fb: FormBuilder,
@@ -211,10 +171,6 @@ export class SettingsComponent implements OnInit {
       currentPassword: ['', Validators.required],
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
-    });
-
-    this.calendarForm = this.fb.group({
-      calendarLink: ['']
     });
   }
 
@@ -245,9 +201,6 @@ export class SettingsComponent implements OnInit {
             firstName: company.name,
             lastName: ''
           });
-          // Load calendar link
-          this.currentCalendarLink.set(company.calendarLink || '');
-          this.calendarForm.patchValue({ calendarLink: company.calendarLink || '' });
         },
         error: () => {
           // Profile might not exist yet
@@ -348,25 +301,6 @@ export class SettingsComponent implements OnInit {
       error: (err) => {
         this.passwordLoading.set(false);
         this.passwordError.set(err.error?.message || 'Failed to update password');
-      }
-    });
-  }
-
-  saveCalendarLink() {
-    this.calendarLoading.set(true);
-    this.calendarError.set(null);
-
-    this.companyService.updateProfile({
-      calendarLink: this.calendarForm.value.calendarLink
-    }).subscribe({
-      next: () => {
-        this.calendarLoading.set(false);
-        this.currentCalendarLink.set(this.calendarForm.value.calendarLink);
-        this.notificationService.success('Lien Cal.com enregistré');
-      },
-      error: (err) => {
-        this.calendarLoading.set(false);
-        this.calendarError.set(err.error?.message || 'Erreur lors de la sauvegarde');
       }
     });
   }
